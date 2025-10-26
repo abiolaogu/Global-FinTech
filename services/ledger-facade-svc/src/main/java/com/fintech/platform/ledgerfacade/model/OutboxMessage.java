@@ -40,5 +40,35 @@ public class OutboxMessage {
         this.payload = payload;
     }
 
-    // Getters and setters
+    public Long getId() {
+        return id;
+    }
+
+    public String getAggregateType() {
+        return aggregateType;
+    }
+
+    public String getAggregateId() {
+        return aggregateId;
+    }
+
+    public String getEventType() {
+        return eventType;
+    }
+
+    public String getPayload() {
+        return payload;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getProcessedAt() {
+        return processedAt;
+    }
+
+    public void setProcessedAt(Instant processedAt) {
+        this.processedAt = processedAt;
+    }
 }
