@@ -1,0 +1,13 @@
+# Maven
+target/
+
+# IDE files
+.idea/
+*.iml
+*.iws
+
+# Log files
+*.log
+
+# Dependency directories
+node_modules/
