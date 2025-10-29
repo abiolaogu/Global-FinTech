@@ -1,0 +1,6 @@
+{
+"schema_version": "1.0",
+"jurisdiction": "NG-CBN",
+"type": "STR",
+"required_fields": ["subject","narrative","transactions","attachments"]
+}

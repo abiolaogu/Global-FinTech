@@ -1,0 +1,11 @@
+id: ca_velocity_interac_v1
+where: event.type == "TRANSFER" and ctx.jurisdiction_pack == "CA" and event.channel in ["INTERAC","EFT"]
+window: 24h
+group_by: actor_id
+conditions:
+- sum(amount_cad) > 10000
+- count(txn_id) >= 10
+- distinct(dest_bank_id) >= 3
+action: alert("VELOCITY_SPIKE_CA")
+severity: MEDIUM
+obligations: ["OPEN_CASE_AML"]

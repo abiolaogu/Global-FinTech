@@ -1,0 +1,11 @@
+{
+"$schema": "https://json-schema.org/draft/2020-12/schema",
+"title": "DecisionInput",
+"type": "object",
+"required": ["actor","action","context"],
+"properties": {
+"actor": {"type": "object"},
+"action": {"type": "object"},
+"context": {"type": "object"}
+}
+}
