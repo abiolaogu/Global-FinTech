@@ -8,5 +8,5 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface FineractClient {
 
     @PostMapping("/transfers")
-    void createTransfer(@RequestBody FineractTransferRequest request);
+    FineractTransferResponse createTransfer(@RequestBody FineractTransferRequest request);
 }
