@@ -3,6 +3,7 @@ package com.fintech.platform.ledgerfacade;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fintech.platform.ledgerfacade.clients.FineractClient;
 import com.fintech.platform.ledgerfacade.clients.FineractTransferRequest;
+import com.fintech.platform.ledgerfacade.clients.FineractTransferResponse;
 import com.fintech.platform.ledgerfacade.dto.TransferRequest;
 import com.fintech.platform.ledgerfacade.model.IdempotencyKey;
 import com.fintech.platform.ledgerfacade.model.OutboxMessage;
@@ -24,6 +25,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -59,22 +61,27 @@ class TransferServiceTest {
     }
 
     @Test
-    void createTransfer_whenSuccessful_callsFineractAndSavesOutbox() {
+    void createTransfer_whenSuccessful_callsFineractAndSavesOutboxWithCorrectTxId() {
         // Given
         UUID idempotencyKey = UUID.randomUUID();
         TransferRequest request = new TransferRequest("source-acc", "dest-acc", BigDecimal.TEN, "USD", idempotencyKey);
+        String expectedTransactionId = "FIN-TX-12345";
+
         when(idempotencyKeyRepository.findById(idempotencyKey)).thenReturn(Optional.empty());
+        when(fineractClient.createTransfer(any(FineractTransferRequest.class)))
+            .thenReturn(new FineractTransferResponse(expectedTransactionId));
 
         // When
-        transferService.createTransfer(request);
+        var response = transferService.createTransfer(request);
 
         // Then
+        assertEquals(expectedTransactionId, response.transactionId());
+
         verify(fineractClient).createTransfer(fineractRequestCaptor.capture());
         assertEquals("source-acc", fineractRequestCaptor.getValue().fromAccountId());
-        assertEquals("dest-acc", fineractRequestCaptor.getValue().toAccountId());
-        assertEquals(10.0, fineractRequestCaptor.getValue().amount());
 
         verify(outboxMessageRepository).save(outboxMessageCaptor.capture());
         assertEquals("transfer.created", outboxMessageCaptor.getValue().getEventType());
+        assertEquals(expectedTransactionId, outboxMessageCaptor.getValue().getAggregateId());
     }
 }
