@@ -1,0 +1,11 @@
+id: hk_structuring_v1
+where: event.type == "TRANSFER" and ctx.jurisdiction_pack == "HK"
+window: 24h
+group_by: actor_id
+conditions:
+- sum(amount_hkd) > 120000
+- count(txn_id) >= 8
+- distinct(dest_country) >= 3
+action: alert("POSSIBLE_STRUCTURING")
+severity: HIGH
+obligations: ["FREEZE_RELATED_TXNS","OPEN_CASE_AML"]

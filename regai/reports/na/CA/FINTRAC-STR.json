@@ -1,0 +1,15 @@
+{
+"schema_version": "1.0",
+"jurisdiction": "CA",
+"authority": "FINTRAC",
+"report_type": "STR",
+"notes": "Align with PCMLTFA and FINTRAC tech specs; map internal fields via ETL.",
+"required_fields": [
+"reporting_entity_info",
+"subject",
+"transactions",
+"suspicion_narrative",
+"dates",
+"attachments"
+]
+}

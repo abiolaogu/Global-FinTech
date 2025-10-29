@@ -1,0 +1,17 @@
+services:
+    api:
+        build: ./regai_service
+        environment:
+            - POLICY_VERSION=${POLICY_VERSION:-dev}
+            - SERVICE_VERSION=1.0.0
+            - OPA_URL=http://opa:8181/v1/data/payouts/decision
+        ports: ["8000:8000"]
+        depends_on: [opa]
+        volumes:
+            - ./policies:/policies:ro
+    opa:
+        image: openpolicyagent/opa:0.62.1
+        command: ["run","--server","--addr=:8181","--diagnostic-addr=:8282","--ignore=.*","/policies"]
+        ports: ["8181:8181","8282:8282"]
+        volumes:
+            - ./policies:/policies:ro
