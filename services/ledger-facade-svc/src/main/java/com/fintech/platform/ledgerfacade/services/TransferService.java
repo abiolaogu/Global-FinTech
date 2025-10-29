@@ -3,6 +3,7 @@ package com.fintech.platform.ledgerfacade.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fintech.platform.ledgerfacade.clients.FineractClient;
 import com.fintech.platform.ledgerfacade.clients.FineractTransferRequest;
+import com.fintech.platform.ledgerfacade.clients.FineractTransferResponse;
 import com.fintech.platform.ledgerfacade.dto.TransferRequest;
 import com.fintech.platform.ledgerfacade.dto.TransferResponse;
 import com.fintech.platform.ledgerfacade.model.IdempotencyKey;
@@ -43,14 +44,14 @@ public class TransferService {
         idempotencyKeyRepository.save(new IdempotencyKey(request.idempotencyKey()));
 
         // 3. Call Fineract to create the transfer
-        fineractClient.createTransfer(new FineractTransferRequest(
+        FineractTransferResponse fineractResponse = fineractClient.createTransfer(new FineractTransferRequest(
             request.sourceAccountId(),
             request.destinationAccountId(),
             request.amount().doubleValue()
         ));
 
         // 4. Save Outbox Message
-        String transactionId = "dummy-tx-id"; // This would come from Fineract
+        String transactionId = fineractResponse.transactionId();
         String payload = objectMapper.writeValueAsString(request);
         OutboxMessage outboxMessage = new OutboxMessage(
             "transfer",
