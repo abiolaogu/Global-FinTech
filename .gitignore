@@ -1,13 +1,14 @@
-# Maven
-target/
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 
-# IDE files
+# OPA
+opa
+
+# VSCode
+.vscode/
+
+# IDE
 .idea/
-*.iml
-*.iws
-
-# Log files
-*.log
-
-# Dependency directories
-node_modules/

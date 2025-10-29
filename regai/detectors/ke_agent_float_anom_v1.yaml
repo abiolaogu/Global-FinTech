@@ -1,0 +1,11 @@
+id: ke_agent_float_anom_v1
+where: event.type == "AGENT_CASHOUT" and ctx.jurisdiction_pack == "KE-CBK"
+window: 7d
+group_by: agent_id
+conditions:
+- zscore(sum(amount_local)) > 3
+- distinct(device_id) >= 3
+- geo_radius_km(home_cell, latest_cell) > 50
+action: alert("AGENT_FLOAT_SPIKE")
+severity: HIGH
+obligations: ["OPEN_CASE_AML","FREEZE_RELATED_TXNS"]
