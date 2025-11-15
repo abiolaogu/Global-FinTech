@@ -1,0 +1,23 @@
+apiVersion: v2
+name: atlasx
+description: A Helm chart for AtlasX Global FinTech Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - fintech
+  - payments
+  - trading
+  - crypto
+maintainers:
+  - name: AtlasX Team
+    email: devops@atlasx.io
+dependencies:
+  - name: postgresql
+    version: 12.x.x
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  - name: redis
+    version: 18.x.x
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
