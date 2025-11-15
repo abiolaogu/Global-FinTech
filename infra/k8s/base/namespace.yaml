@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: atlasx
+  labels:
+    name: atlasx
+    env: production
