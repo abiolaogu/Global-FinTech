@@ -1,0 +1,158 @@
+global:
+  environment: production
+  region: us-east-1
+
+replicaCount: 3
+
+image:
+  repository: atlasx/api
+  pullPolicy: Always
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "3000"
+  prometheus.io/path: "/metrics"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  fsGroup: 1001
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+
+service:
+  type: ClusterIP
+  port: 3000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+  hosts:
+    - host: api.atlasx.io
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: atlasx-api-tls
+      hosts:
+        - api.atlasx.io
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - atlasx
+          topologyKey: kubernetes.io/hostname
+
+# Application configuration
+config:
+  nodeEnv: production
+  logLevel: info
+  port: 3000
+  corsOrigin: "https://app.atlasx.io"
+  rateLimitWindow: 900000
+  rateLimitMax: 100
+
+# PostgreSQL configuration (if using Bitnami chart)
+postgresql:
+  enabled: true
+  auth:
+    username: postgres
+    password: REPLACE_WITH_ACTUAL_SECRET
+    database: atlasx
+  primary:
+    persistence:
+      enabled: true
+      size: 100Gi
+    resources:
+      limits:
+        memory: 4Gi
+        cpu: 2000m
+      requests:
+        memory: 2Gi
+        cpu: 1000m
+
+# Redis configuration (if using Bitnami chart)
+redis:
+  enabled: true
+  auth:
+    password: REPLACE_WITH_ACTUAL_SECRET
+  master:
+    persistence:
+      enabled: true
+      size: 20Gi
+    resources:
+      limits:
+        memory: 2Gi
+        cpu: 1000m
+      requests:
+        memory: 1Gi
+        cpu: 500m
+
+# External secrets (use with External Secrets Operator)
+externalSecrets:
+  enabled: false
+  backendType: gcpSecretsManager
+  projectId: ""
+  secrets: []
+
+# Monitoring
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    retention: 30d
+  grafana:
+    enabled: true
+    adminPassword: REPLACE_WITH_ACTUAL_SECRET
+
+# Logging
+logging:
+  enabled: true
+  loki:
+    enabled: true
+    retention: 30d
