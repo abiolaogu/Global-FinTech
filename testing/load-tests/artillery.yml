@@ -1,0 +1,145 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    # Warm up phase
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm up - 5 requests/sec"
+
+    # Ramp up phase
+    - duration: 120
+      arrivalRate: 5
+      rampTo: 50
+      name: "Ramp up - 5 to 50 requests/sec"
+
+    # Sustained load
+    - duration: 300
+      arrivalRate: 50
+      name: "Sustained load - 50 requests/sec"
+
+    # Peak load
+    - duration: 120
+      arrivalRate: 100
+      name: "Peak load - 100 requests/sec"
+
+    # Cool down
+    - duration: 60
+      arrivalRate: 100
+      rampTo: 5
+      name: "Cool down - 100 to 5 requests/sec"
+
+  # Environment variables
+  variables:
+    apiVersion: "v1"
+
+  # Defaults
+  defaults:
+    headers:
+      Content-Type: "application/json"
+      Accept: "application/json"
+
+  # Plugins for metrics
+  plugins:
+    metrics-by-endpoint:
+      stripQueryString: true
+
+  # Performance thresholds
+  ensure:
+    maxErrorRate: 1  # Max 1% error rate
+    p95: 500         # 95th percentile response time < 500ms
+    p99: 1000        # 99th percentile response time < 1000ms
+
+scenarios:
+  # Scenario 1: Wallet Operations
+  - name: "Wallet Operations"
+    weight: 40
+    flow:
+      - post:
+          url: "/api/{{ apiVersion }}/wallets"
+          json:
+            userId: "user-{{ $randomString() }}"
+            currency: "USD"
+          capture:
+            - json: "$.walletId"
+              as: "walletId"
+
+      - think: 1
+
+      - get:
+          url: "/api/{{ apiVersion }}/wallets/{{ walletId }}"
+
+      - think: 1
+
+      - get:
+          url: "/api/{{ apiVersion }}/wallets/{{ walletId }}/balance"
+
+  # Scenario 2: Payment Initiation
+  - name: "Payment Initiation"
+    weight: 30
+    flow:
+      - post:
+          url: "/api/{{ apiVersion }}/payment-gateways/payments/initiate"
+          json:
+            userId: "user-{{ $randomString() }}"
+            merchantId: "merchant-123"
+            amount: "{{ $randomNumber(100, 10000) }}"
+            currency: "NGN"
+            provider: "paystack"
+            customer:
+              email: "test{{ $randomNumber(1, 10000) }}@example.com"
+              name: "Test User"
+          capture:
+            - json: "$.reference"
+              as: "reference"
+
+      - think: 2
+
+      - post:
+          url: "/api/{{ apiVersion }}/payment-gateways/payments/verify"
+          json:
+            reference: "{{ reference }}"
+            provider: "paystack"
+
+  # Scenario 3: Virtual Account Creation
+  - name: "Virtual Account Creation"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/{{ apiVersion }}/virtual-accounts"
+          json:
+            userId: "user-{{ $randomString() }}"
+            currency: "NGN"
+            country: "NG"
+            provider: "paystack"
+            accountName: "Test User {{ $randomString() }}"
+          capture:
+            - json: "$.virtualAccountId"
+              as: "virtualAccountId"
+
+      - think: 1
+
+      - get:
+          url: "/api/{{ apiVersion }}/virtual-accounts/{{ virtualAccountId }}"
+
+  # Scenario 4: Payment Link Creation
+  - name: "Payment Link Creation"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/{{ apiVersion }}/payment-links"
+          json:
+            userId: "user-{{ $randomString() }}"
+            title: "Test Payment Link"
+            amountType: "fixed"
+            amount: "{{ $randomNumber(1000, 50000) }}"
+            currency: "NGN"
+          capture:
+            - json: "$.linkId"
+              as: "linkId"
+            - json: "$.code"
+              as: "code"
+
+      - think: 1
+
+      - get:
+          url: "/api/{{ apiVersion }}/payment-links/code/{{ code }}"
