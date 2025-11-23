@@ -46,6 +46,11 @@ dependencies:
   # Image Picker
   image_picker: ^1.0.5
 
+  # SMS & USSD
+  telephony: ^0.2.0
+  url_launcher: ^6.2.2
+  sms_advanced: ^1.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
