@@ -1,0 +1,70 @@
+name: global_fintech_mobile
+description: Global FinTech Mobile Application with Offline Wallet
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # UI & Material Design
+  cupertino_icons: ^1.0.6
+
+  # Local Database & Storage
+  sqflite: ^2.3.0
+  path_provider: ^2.1.1
+  flutter_secure_storage: ^9.0.0
+
+  # Network & Connectivity
+  http: ^1.1.0
+  connectivity_plus: ^5.0.2
+
+  # Encryption & Security
+  encrypt: ^5.0.3
+  crypto: ^3.0.3
+
+  # State Management
+  provider: ^6.1.1
+
+  # Utilities
+  uuid: ^4.2.2
+  intl: ^0.18.1
+
+  # QR Code
+  qr_flutter: ^4.1.0
+  qr_code_scanner: ^1.0.1
+
+  # Biometric Authentication
+  local_auth: ^2.1.8
+
+  # Permission Handling
+  permission_handler: ^11.1.0
+
+  # Image Picker
+  image_picker: ^1.0.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  mockito: ^5.4.4
+  build_runner: ^2.4.7
+
+flutter:
+  uses-material-design: true
+
+  # Assets
+  # assets:
+  #   - images/
+  #   - icons/
+
+  # Fonts
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
