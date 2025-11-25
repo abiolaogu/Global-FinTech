@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  # TigerBeetle Node 0 (Primary)
+  tigerbeetle-0:
+    image: ghcr.io/tigerbeetle/tigerbeetle:latest
+    container_name: tigerbeetle-0
+    command: >
+      sh -c "
+      if [ ! -f /var/lib/tigerbeetle/0_0.tigerbeetle ]; then
+        tigerbeetle format --cluster=0 --replica=0 --replica-count=3 /var/lib/tigerbeetle/0_0.tigerbeetle
+      fi &&
+      tigerbeetle start --addresses=0.0.0.0:3000 --cache-grid=512MB /var/lib/tigerbeetle/0_0.tigerbeetle
+      "
+    ports:
+      - "3000:3000"
+    volumes:
+      - tigerbeetle-0-data:/var/lib/tigerbeetle
+    environment:
+      - RUST_LOG=info
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fintech-network
+    restart: unless-stopped
+
+  # TigerBeetle Node 1 (Replica)
+  tigerbeetle-1:
+    image: ghcr.io/tigerbeetle/tigerbeetle:latest
+    container_name: tigerbeetle-1
+    command: >
+      sh -c "
+      if [ ! -f /var/lib/tigerbeetle/0_1.tigerbeetle ]; then
+        tigerbeetle format --cluster=0 --replica=1 --replica-count=3 /var/lib/tigerbeetle/0_1.tigerbeetle
+      fi &&
+      tigerbeetle start --addresses=0.0.0.0:3001 --cache-grid=512MB /var/lib/tigerbeetle/0_1.tigerbeetle
+      "
+    ports:
+      - "3001:3001"
+    volumes:
+      - tigerbeetle-1-data:/var/lib/tigerbeetle
+    environment:
+      - RUST_LOG=info
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "3001"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fintech-network
+    restart: unless-stopped
+
+  # TigerBeetle Node 2 (Replica)
+  tigerbeetle-2:
+    image: ghcr.io/tigerbeetle/tigerbeetle:latest
+    container_name: tigerbeetle-2
+    command: >
+      sh -c "
+      if [ ! -f /var/lib/tigerbeetle/0_2.tigerbeetle ]; then
+        tigerbeetle format --cluster=0 --replica=2 --replica-count=3 /var/lib/tigerbeetle/0_2.tigerbeetle
+      fi &&
+      tigerbeetle start --addresses=0.0.0.0:3002 --cache-grid=512MB /var/lib/tigerbeetle/0_2.tigerbeetle
+      "
+    ports:
+      - "3002:3002"
+    volumes:
+      - tigerbeetle-2-data:/var/lib/tigerbeetle
+    environment:
+      - RUST_LOG=info
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "3002"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fintech-network
+    restart: unless-stopped
+
+volumes:
+  tigerbeetle-0-data:
+    driver: local
+  tigerbeetle-1-data:
+    driver: local
+  tigerbeetle-2-data:
+    driver: local
+
+networks:
+  fintech-network:
+    driver: bridge
