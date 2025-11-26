@@ -4,6 +4,9 @@ import 'core/database/local_database.dart';
 import 'core/services/offline_wallet_service.dart';
 import 'core/services/sync_service.dart';
 import 'core/services/wallet_encryption_service.dart';
+import 'features/auth/screens/login_screen.dart';
+import 'features/auth/screens/register_screen.dart';
+import 'features/home/screens/home_screen.dart';
 import 'features/wallet/screens/offline_wallet_screen.dart';
 
 void main() async {
@@ -64,6 +67,9 @@ class GlobalFinTechApp extends StatelessWidget {
         ),
         home: const SplashScreen(),
         routes: {
+          '/login': (context) => const LoginScreen(),
+          '/register': (context) => const RegisterScreen(),
+          '/home': (context) => const HomeScreen(),
           '/wallet': (context) => const OfflineWalletScreen(
                 userId: 'demo-user-id',
               ),
@@ -91,8 +97,10 @@ class _SplashScreenState extends State<SplashScreen> {
     // Simulate splash screen delay
     await Future.delayed(const Duration(seconds: 2));
 
+    // TODO: Check if user is already logged in
+    // For now, always navigate to login
     if (mounted) {
-      Navigator.pushReplacementNamed(context, '/wallet');
+      Navigator.pushReplacementNamed(context, '/login');
     }
   }
 
