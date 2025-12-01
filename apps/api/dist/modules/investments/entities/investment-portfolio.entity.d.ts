@@ -1,0 +1,34 @@
+export declare class InvestmentPortfolioEntity {
+    portfolioId: string;
+    userId: string;
+    opportunityId: string;
+    shares: string;
+    totalInvested: string;
+    currentValue: string;
+    currency: string;
+    averageBuyPrice: string;
+    unrealizedGainLoss: string;
+    unrealizedGainLossPercent: string;
+    realizedGainLoss: string;
+    totalDividends: string;
+    totalFeesPaid: string;
+    firstInvestmentDate: Date;
+    lastInvestmentDate: Date;
+    totalTransactions: number;
+    buyTransactions: number;
+    sellTransactions: number;
+    portfolioAllocationPercent: string;
+    riskCategory: string;
+    autoInvestEnabled: boolean;
+    autoInvestAmount: string;
+    autoInvestFrequency: string;
+    nextAutoInvestDate: Date;
+    dividendReinvestment: boolean;
+    lastDividendDate: Date;
+    lastDividendAmount: string;
+    isActive: boolean;
+    closedAt: Date;
+    notes: string;
+    createdAt: Date;
+    updatedAt: Date;
+}

@@ -228,7 +228,7 @@ export const isProductOnSale = (product: {
 export const isProductInStock = (product: {
   stock_quantity?: number | null;
 }): boolean => {
-  return product.stock_quantity === null || product.stock_quantity > 0;
+  return product.stock_quantity === null || (typeof product.stock_quantity === 'number' && product.stock_quantity > 0);
 };
 
 /**

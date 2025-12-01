@@ -1,0 +1,32 @@
+export declare class VirtualAccountEntity {
+    virtualAccountId: string;
+    userId: string;
+    walletId: string;
+    accountNumber: string;
+    accountName: string;
+    bankName: string;
+    bankCode: string;
+    routingNumber: string;
+    iban: string;
+    swiftCode: string;
+    currency: string;
+    country: string;
+    status: string;
+    accountType: string;
+    provider: string;
+    providerId: string;
+    providerAccountId: string;
+    autoCredit: boolean;
+    metadata: Record<string, any>;
+    providerData: Record<string, any>;
+    totalReceived: string;
+    transactionCount: number;
+    lastTransactionAt: Date;
+    activatedAt: Date;
+    suspendedAt: Date;
+    suspensionReason: string;
+    closedAt: Date;
+    expiresAt: Date;
+    createdAt: Date;
+    updatedAt: Date;
+}

@@ -25,7 +25,7 @@ class MarketplaceService {
   ): Promise<ApiResponse<T>> {
     const token = this.getAuthToken();
 
-    const headers: HeadersInit = {
+    const headers: any = {
       'Content-Type': 'application/json',
       ...options.headers,
     };
