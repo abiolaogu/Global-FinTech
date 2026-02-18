@@ -1,0 +1,14 @@
+query ProjectsList {
+  projects {
+    id
+    name
+    organization_id
+  }
+}
+
+mutation CreateProject($name: String!, $organization_id: ID) {
+  insert_project_one(object: {name: $name, organization_id: $organization_id}) {
+    id
+    name
+  }
+}

@@ -1,0 +1,50 @@
+schema {
+  query: query_root
+  mutation: mutation_root
+}
+
+type query_root {
+  users: [user!]!
+  organizations: [organization!]!
+  projects: [project!]!
+}
+
+type mutation_root {
+  insert_user_one(object: user_insert_input!): user
+  insert_organization_one(object: organization_insert_input!): organization
+  insert_project_one(object: project_insert_input!): project
+}
+
+type user {
+  id: ID!
+  name: String!
+  email: String
+}
+
+type organization {
+  id: ID!
+  name: String!
+}
+
+type project {
+  id: ID!
+  name: String!
+  organization_id: ID
+}
+
+input user_insert_input {
+  id: ID
+  name: String!
+  email: String
+}
+
+input organization_insert_input {
+  id: ID
+  name: String!
+}
+
+input project_insert_input {
+  id: ID
+  name: String!
+  organization_id: ID
+}

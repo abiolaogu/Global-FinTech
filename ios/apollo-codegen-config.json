@@ -1,0 +1,21 @@
+{
+  "schemaNamespace": "FrontendSchema",
+  "input": {
+    "operationSearchPaths": ["Sources/GraphQL/**/*.graphql"],
+    "schemaSearchPaths": ["../backend/schema.graphql", "../schema.graphql"]
+  },
+  "output": {
+    "testMocks": {
+      "none": {}
+    },
+    "schemaTypes": {
+      "path": "Sources/GraphQL/API",
+      "moduleType": {
+        "swiftPackageManager": {}
+      }
+    },
+    "operations": {
+      "inSchemaModule": {}
+    }
+  }
+}
