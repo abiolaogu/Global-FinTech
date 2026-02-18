@@ -1,0 +1,47 @@
+global:
+  environment: staging
+  region: global
+
+replicaCount: 2
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+ingress:
+  hosts:
+    - host: api-staging.global-fintech.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: global-fintech-api-staging-tls
+      hosts:
+        - api-staging.global-fintech.com
+
+database:
+  host: postgres-primary.staging.svc.cluster.local
+  port: 5432
+  name: atlasx_staging
+  user: atlasx_app
+  sslMode: require
+
+redisExternal:
+  host: redis-master.staging.svc.cluster.local
+  port: 6379
+
+externalSecrets:
+  secretStoreRef:
+    name: atlasx-staging-secret-store
+    kind: ClusterSecretStore
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi

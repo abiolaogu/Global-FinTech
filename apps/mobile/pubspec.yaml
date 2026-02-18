@@ -46,6 +46,11 @@ dependencies:
   # Image Picker
   image_picker: ^1.0.5
 
+  # UI Enhancements
+  flutter_animate: ^4.2.0
+  google_fonts: ^6.1.0
+  glassmorphism: ^3.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

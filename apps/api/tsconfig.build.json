@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "incremental": false
+  },
+  "include": [
+    "src/main.ts",
+    "src/app.module.ts",
+    "src/platform/**/*.ts",
+    "src/modules/wallets/**/*.ts",
+    "src/modules/split-payments/**/*.ts",
+    "src/modules/payment-gateways/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test",
+    "**/*.spec.ts"
+  ]
+}

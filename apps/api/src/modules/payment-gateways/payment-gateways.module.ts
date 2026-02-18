@@ -6,7 +6,6 @@ import { PaymentGatewayEntity } from './entities/payment-gateway.entity';
 import { PaymentTransactionEntity } from './entities/payment-transaction.entity';
 import { WalletsModule } from '../wallets/wallets.module';
 import { SplitPaymentsModule } from '../split-payments/split-payments.module';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -16,7 +15,6 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     ]),
     WalletsModule,
     SplitPaymentsModule,
-    EventEmitterModule.forRoot(),
   ],
   controllers: [PaymentGatewaysController],
   providers: [PaymentGatewaysService],

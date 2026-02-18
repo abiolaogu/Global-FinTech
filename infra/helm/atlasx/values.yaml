@@ -1,13 +1,14 @@
 global:
   environment: production
-  region: us-east-1
+  region: global
+  timezone: UTC
 
 replicaCount: 3
 
 image:
-  repository: atlasx/api
-  pullPolicy: Always
-  tag: "latest"
+  repository: ghcr.io/global-fintech/global-fintech-api
+  pullPolicy: IfNotPresent
+  tag: "1.1.0"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -23,10 +24,14 @@ podAnnotations:
   prometheus.io/port: "3000"
   prometheus.io/path: "/metrics"
 
+podLabels: {}
+
 podSecurityContext:
   runAsNonRoot: true
   runAsUser: 1001
   fsGroup: 1001
+  seccompProfile:
+    type: RuntimeDefault
 
 securityContext:
   capabilities:
@@ -45,16 +50,16 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/proxy-body-size: "20m"
   hosts:
-    - host: api.atlasx.io
+    - host: api.global-fintech.example.com
       paths:
         - path: /
           pathType: Prefix
   tls:
-    - secretName: atlasx-api-tls
+    - secretName: global-fintech-api-tls
       hosts:
-        - api.atlasx.io
+        - api.global-fintech.example.com
 
 resources:
   limits:
@@ -64,6 +69,32 @@ resources:
     cpu: 250m
     memory: 512Mi
 
+startupProbe:
+  enabled: true
+  httpGet:
+    path: /health
+    port: http
+  failureThreshold: 30
+  periodSeconds: 5
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 20
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
 autoscaling:
   enabled: true
   minReplicas: 3
@@ -71,8 +102,11 @@ autoscaling:
   targetCPUUtilizationPercentage: 70
   targetMemoryUtilizationPercentage: 80
 
-nodeSelector: {}
+pdb:
+  enabled: true
+  minAvailable: 2
 
+nodeSelector: {}
 tolerations: []
 
 affinity:
@@ -88,71 +122,96 @@ affinity:
                   - atlasx
           topologyKey: kubernetes.io/hostname
 
-# Application configuration
+topologySpreadConstraints:
+  enabled: true
+  maxSkew: 1
+  topologyKey: topology.kubernetes.io/zone
+  whenUnsatisfiable: ScheduleAnyway
+
 config:
   nodeEnv: production
   logLevel: info
   port: 3000
-  corsOrigin: "https://app.atlasx.io"
-  rateLimitWindow: 900000
-  rateLimitMax: 100
+  coreApiEnabled: "true"
+  corsOrigin: "https://app.global-fintech.example.com"
+  rateLimitWindow: "900000"
+  rateLimitMax: "100"
+  trustedProxy: "true"
 
-# PostgreSQL configuration (if using Bitnami chart)
-postgresql:
+database:
+  host: "postgresql-primary.database.svc.cluster.local"
+  port: 5432
+  name: "atlasx"
+  user: "atlasx"
+  sslMode: "require"
+
+redisExternal:
+  host: "redis-master.cache.svc.cluster.local"
+  port: 6379
+
+secrets:
+  create: false
+  existingSecret: "atlasx-runtime-secrets"
+  databasePassword: "REPLACE_ME"
+  redisPassword: "REPLACE_ME"
+  jwtSecret: "REPLACE_ME"
+  jwtRefreshSecret: "REPLACE_ME"
+  encryptionKey: "REPLACE_ME"
+
+externalSecrets:
+  enabled: false
+  secretStoreRef:
+    name: "atlasx-cluster-secret-store"
+    kind: ClusterSecretStore
+  refreshInterval: 1h
+  targetSecretName: "atlasx-runtime-secrets"
+  data:
+    - secretKey: DATABASE_PASSWORD
+      remoteRef:
+        key: atlasx/prod/database
+        property: password
+    - secretKey: REDIS_PASSWORD
+      remoteRef:
+        key: atlasx/prod/redis
+        property: password
+    - secretKey: JWT_SECRET
+      remoteRef:
+        key: atlasx/prod/jwt
+        property: access
+    - secretKey: JWT_REFRESH_SECRET
+      remoteRef:
+        key: atlasx/prod/jwt
+        property: refresh
+    - secretKey: ENCRYPTION_KEY
+      remoteRef:
+        key: atlasx/prod/app
+        property: encryption_key
+
+networkPolicy:
   enabled: true
+  allowedIngressNamespaces:
+    - ingress-nginx
+  allowedMonitoringNamespaces:
+    - monitoring
+
+postgresql:
+  enabled: false
   auth:
-    username: postgres
-    password: REPLACE_WITH_ACTUAL_SECRET
+    username: atlasx
+    password: "REPLACE_ME"
     database: atlasx
   primary:
     persistence:
       enabled: true
+      storageClass: harvester-longhorn
       size: 100Gi
-    resources:
-      limits:
-        memory: 4Gi
-        cpu: 2000m
-      requests:
-        memory: 2Gi
-        cpu: 1000m
 
-# Redis configuration (if using Bitnami chart)
 redis:
-  enabled: true
+  enabled: false
   auth:
-    password: REPLACE_WITH_ACTUAL_SECRET
+    password: "REPLACE_ME"
   master:
     persistence:
       enabled: true
+      storageClass: harvester-longhorn
       size: 20Gi
-    resources:
-      limits:
-        memory: 2Gi
-        cpu: 1000m
-      requests:
-        memory: 1Gi
-        cpu: 500m
-
-# External secrets (use with External Secrets Operator)
-externalSecrets:
-  enabled: false
-  backendType: gcpSecretsManager
-  projectId: ""
-  secrets: []
-
-# Monitoring
-monitoring:
-  enabled: true
-  prometheus:
-    enabled: true
-    retention: 30d
-  grafana:
-    enabled: true
-    adminPassword: REPLACE_WITH_ACTUAL_SECRET
-
-# Logging
-logging:
-  enabled: true
-  loki:
-    enabled: true
-    retention: 30d
