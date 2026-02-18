@@ -1,0 +1,118 @@
+version: "1.0"
+standard: "AIDD-28"
+docs_dir: "docs"
+organization: "BillyRonks Global Limited"
+last_updated: "2026-02-18"
+
+required_documents:
+  # Analysis & Requirements
+  - filename: "gap-analysis.md"
+    category: "analysis"
+    description: "Gap analysis identifying documentation and feature gaps"
+  - filename: "prd.md"
+    category: "requirements"
+    description: "Product Requirements Document"
+  - filename: "brd.md"
+    category: "requirements"
+    description: "Business Requirements Document"
+
+  # Architecture & Design
+  - filename: "architecture.md"
+    category: "architecture"
+    description: "System Architecture overview"
+  - filename: "software-architecture.md"
+    category: "architecture"
+    description: "Software Architecture and component design"
+  - filename: "enterprise-architecture.md"
+    category: "architecture"
+    description: "Enterprise Architecture and integration patterns"
+  - filename: "database-schema.md"
+    category: "architecture"
+    description: "Database Schema and data dictionary"
+  - filename: "workflows.md"
+    category: "architecture"
+    description: "Workflows and user journeys"
+  - filename: "hld.md"
+    category: "design"
+    description: "High-Level Design document"
+  - filename: "lld.md"
+    category: "design"
+    description: "Low-Level Design document"
+  - filename: "use-cases.md"
+    category: "design"
+    description: "Use cases and scenarios"
+
+  # Technical Documentation
+  - filename: "technical-writeup.md"
+    category: "technical"
+    description: "Technical write-up and implementation details"
+  - filename: "hardware-requirements.md"
+    category: "technical"
+    description: "Hardware requirements and infrastructure sizing"
+  - filename: "software-requirements.md"
+    category: "technical"
+    description: "Software requirements and dependencies"
+  - filename: "technical-specifications.md"
+    category: "technical"
+    description: "Technical specifications and API reference"
+
+  # User & Training Manuals
+  - filename: "user-manual-admin.md"
+    category: "manuals"
+    description: "User manual for administrators"
+  - filename: "user-manual-enduser.md"
+    category: "manuals"
+    description: "User manual for end users"
+  - filename: "user-manual-developer.md"
+    category: "manuals"
+    description: "User manual for developers"
+  - filename: "training-manual-admin.md"
+    category: "training"
+    description: "Training manual for administrators"
+  - filename: "training-manual-enduser.md"
+    category: "training"
+    description: "Training manual for end users"
+  - filename: "training-manual-developer.md"
+    category: "training"
+    description: "Training manual for developers"
+  - filename: "training-video-scripts.md"
+    category: "training"
+    description: "Training video scripts and outlines"
+
+  # Operations & Release
+  - filename: "release-notes.md"
+    category: "operations"
+    description: "Release notes and changelog"
+  - filename: "acceptance-criteria.md"
+    category: "operations"
+    description: "Acceptance criteria and validation requirements"
+  - filename: "testing-requirements-aidd.md"
+    category: "operations"
+    description: "AIDD testing requirements and test plan"
+  - filename: "deployment.md"
+    category: "operations"
+    description: "Deployment guide and procedures"
+
+  # Design Assets
+  - filename: "design/Figma_Make_Prompts.md"
+    category: "design"
+    description: "Figma and Make.com automation prompts"
+
+  # Index
+  - filename: "README.md"
+    category: "index"
+    description: "Documentation index and navigation guide"
+
+naming_rules:
+  case: "lowercase-kebab"
+  extension: ".md"
+  no_numbered_prefixes: true
+  no_uppercase_variants: true
+  exceptions:
+    - "README.md"
+    - "design/Figma_Make_Prompts.md"
+
+header_template: |
+  # {Document Title} — {Project Name}
+  > Version: 1.0 | Last Updated: {date} | Status: Draft
+  > Classification: Internal | Author: AIDD System
