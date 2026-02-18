@@ -1,369 +1,359 @@
 import 'package:flutter/material.dart';
-import '../../../core/models/offline_wallet.dart';
-import '../../../core/models/offline_transaction.dart';
-import '../../../core/services/offline_wallet_service.dart';
-import '../../../core/services/sync_service.dart';
-import '../widgets/wallet_card.dart';
-import '../widgets/transaction_list_item.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:glassmorphism/glassmorphism.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class OfflineWalletScreen extends StatefulWidget {
-  final String userId;
-
-  const OfflineWalletScreen({
-    Key? key,
-    required this.userId,
-  }) : super(key: key);
+  const OfflineWalletScreen({super.key});
 
   @override
   State<OfflineWalletScreen> createState() => _OfflineWalletScreenState();
 }
 
 class _OfflineWalletScreenState extends State<OfflineWalletScreen> {
-  final OfflineWalletService _walletService = OfflineWalletService();
-  late SyncService _syncService;
-
-  List<OfflineWallet> _wallets = [];
-  Map<String, List<OfflineTransaction>> _transactions = {};
-  bool _isLoading = true;
-  bool _isSyncing = false;
-  String? _selectedWalletId;
-
-  @override
-  void initState() {
-    super.initState();
-    _syncService = SyncService(
-      walletService: _walletService,
-      baseUrl: 'https://api.your-domain.com',
-      apiKey: 'your-api-key',
-    );
-    _loadWallets();
-    _listenToSyncStatus();
-    _syncService.startAutoSync();
-  }
-
-  @override
-  void dispose() {
-    _syncService.stopAutoSync();
-    _syncService.dispose();
-    super.dispose();
-  }
-
-  void _listenToSyncStatus() {
-    _syncService.syncStatus.listen((status) {
-      setState(() {
-        _isSyncing = status == SyncStatus.syncing;
-      });
-
-      if (status == SyncStatus.completed) {
-        _loadWallets();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sync completed successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else if (status == SyncStatus.failed) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sync failed. Will retry later.'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
-    });
-  }
-
-  Future<void> _loadWallets() async {
-    setState(() => _isLoading = true);
-
-    try {
-      final wallets = await _walletService.getUserWallets(widget.userId);
-      setState(() {
-        _wallets = wallets;
-        if (_selectedWalletId == null && wallets.isNotEmpty) {
-          _selectedWalletId = wallets.first.walletId;
-        }
-      });
-
-      if (_selectedWalletId != null) {
-        await _loadTransactions(_selectedWalletId!);
-      }
-    } catch (e) {
-      _showError('Failed to load wallets: $e');
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _loadTransactions(String walletId) async {
-    try {
-      final transactions = await _walletService.getWalletTransactions(walletId);
-      setState(() {
-        _transactions[walletId] = transactions;
-      });
-    } catch (e) {
-      _showError('Failed to load transactions: $e');
-    }
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
-    );
-  }
-
-  Future<void> _performManualSync() async {
-    final result = await _syncService.syncAll();
-    if (result.success) {
-      await _loadWallets();
-    }
-  }
-
-  OfflineWallet? get _selectedWallet {
-    if (_selectedWalletId == null) return null;
-    return _wallets.firstWhere(
-      (w) => w.walletId == _selectedWalletId,
-      orElse: () => _wallets.first,
-    );
-  }
-
-  List<OfflineTransaction> get _selectedWalletTransactions {
-    if (_selectedWalletId == null) return [];
-    return _transactions[_selectedWalletId] ?? [];
-  }
-
-  void _showSendMoneyDialog() {
-    final amountController = TextEditingController();
-    final descriptionController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Send Money'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: amountController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Amount',
-                prefixText: '\$',
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Description (optional)',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final amount = double.tryParse(amountController.text);
-              if (amount == null || amount <= 0) {
-                _showError('Invalid amount');
-                return;
-              }
-
-              try {
-                await _walletService.debitWallet(
-                  walletId: _selectedWalletId!,
-                  amount: amount,
-                  category: 'payment_sent',
-                  description: descriptionController.text,
-                );
-
-                Navigator.pop(context);
-                await _loadWallets();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Transaction queued for sync'),
-                  ),
-                );
-              } catch (e) {
-                _showError(e.toString());
-              }
-            },
-            child: const Text('Send'),
-          ),
-        ],
-      ),
-    );
-  }
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Offline Wallet'),
-        actions: [
-          if (_isSyncing)
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+      backgroundColor: const Color(0xFF0A0E17), // fintech-dark
+      body: Stack(
+        children: [
+          // Background Gradients - Optimized with RepaintBoundary
+          Positioned(
+            top: -100,
+            left: -100,
+            child: RepaintBoundary(
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF2D5BFF).withOpacity(0.2),
+                  blurRadius: 100,
                 ),
               ),
-            )
-          else
-            IconButton(
-              icon: const Icon(Icons.sync),
-              onPressed: _performManualSync,
-              tooltip: 'Sync now',
             ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadWallets,
-              child: Column(
-                children: [
-                  // Wallet Selector
-                  if (_wallets.length > 1)
-                    SizedBox(
-                      height: 120,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _wallets.length,
-                        itemBuilder: (context, index) {
-                          final wallet = _wallets[index];
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _selectedWalletId = wallet.walletId;
-                              });
-                              _loadTransactions(wallet.walletId);
-                            },
-                            child: WalletCard(
-                              wallet: wallet,
-                              isSelected: wallet.walletId == _selectedWalletId,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-
-                  // Selected Wallet Details
-                  if (_selectedWallet != null)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Theme.of(context).primaryColor,
-                            Theme.of(context).primaryColor.withOpacity(0.7),
-                          ],
-                        ),
-                      ),
-                      child: Column(
+          ),
+          Positioned(
+            bottom: -100,
+            right: -100,
+            child: RepaintBoundary(
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF6C42F5).withOpacity(0.2),
+                  blurRadius: 100,
+                ),
+              ),
+            ),
+          ),
+          
+          SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Available Balance',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
+                            'Welcome back,',
+                            style: GoogleFonts.inter(
+                              color: Colors.grey[400],
                               fontSize: 14,
                             ),
-                          ),
-                          const SizedBox(height: 8),
+                          ).animate().fadeIn().slideX(),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Abiola',
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ).animate().fadeIn().slideX(delay: 100.ms),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.notifications_none, color: Colors.white),
+                        onPressed: () {},
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Wallet Card
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: GlassmorphicContainer(
+                    width: double.infinity,
+                    height: 200,
+                    borderRadius: 24,
+                    blur: 20,
+                    alignment: Alignment.center,
+                    border: 1,
+                    linearGradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.white.withOpacity(0.1),
+                        Colors.white.withOpacity(0.05),
+                      ],
+                    ),
+                    borderGradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.white.withOpacity(0.5),
+                        Colors.white.withOpacity(0.1),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                '${_selectedWallet!.currency} ${_selectedWallet!.availableBalance.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
+                                'Total Balance',
+                                style: GoogleFonts.inter(
+                                  color: Colors.grey[300],
+                                  fontSize: 14,
                                 ),
                               ),
-                              if (!_selectedWallet!.isSynced)
-                                const Padding(
-                                  padding: EdgeInsets.only(left: 8),
-                                  child: Icon(
-                                    Icons.sync_problem,
-                                    color: Colors.orange,
-                                    size: 20,
-                                  ),
-                                ),
+                              const Icon(Icons.credit_card, color: Colors.white),
                             ],
                           ),
-                          const SizedBox(height: 16),
+                          Text(
+                            '\$24,500.00',
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ).animate().fadeIn().scale(delay: 200.ms),
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              _buildInfoChip(
-                                'Held: ${_selectedWallet!.heldBalance.toStringAsFixed(2)}',
+                              Text(
+                                '**** 4589',
+                                style: GoogleFonts.inter(
+                                  color: Colors.grey[300],
+                                  fontSize: 14,
+                                ),
                               ),
-                              const SizedBox(width: 8),
-                              _buildInfoChip(
-                                'Pending: ${_selectedWallet!.pendingBalance.toStringAsFixed(2)}',
+                              Text(
+                                'EXP 12/28',
+                                style: GoogleFonts.inter(
+                                  color: Colors.grey[300],
+                                  fontSize: 14,
+                                ),
                               ),
                             ],
                           ),
                         ],
                       ),
                     ),
-
-                  // Transactions List
-                  Expanded(
-                    child: _selectedWalletTransactions.isEmpty
-                        ? const Center(
-                            child: Text('No transactions yet'),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _selectedWalletTransactions.length,
-                            itemBuilder: (context, index) {
-                              final transaction =
-                                  _selectedWalletTransactions[index];
-                              return TransactionListItem(
-                                transaction: transaction,
-                              );
-                            },
-                          ),
                   ),
-                ],
-              ),
+                ).animate().fadeIn().slideY(begin: 0.2, end: 0, delay: 200.ms),
+
+                const SizedBox(height: 32),
+
+                // Actions
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildActionButton(context, Icons.send, 'Send', () {}),
+                      _buildActionButton(context, Icons.add, 'Top Up', () {}),
+                      _buildActionButton(context, Icons.history, 'History', () {
+                        Navigator.pushNamed(context, '/history');
+                      }),
+                      _buildActionButton(context, Icons.more_horiz, 'More', () {}),
+                    ],
+                  ),
+                ).animate().fadeIn().slideY(begin: 0.2, end: 0, delay: 300.ms),
+
+                const SizedBox(height: 32),
+
+                // AI Advisor Banner
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: GestureDetector(
+                    onTap: _showAIAdvisor,
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF2D5BFF), Color(0xFF00D2FF)],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF2D5BFF).withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.psychology, color: Colors.white),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'AI Financial Advisor',
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                Text(
+                                  'Tap for insights',
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white.withOpacity(0.8),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                ).animate().fadeIn().slideX(delay: 400.ms),
+              ],
             ),
-      floatingActionButton: _selectedWallet != null
-          ? FloatingActionButton.extended(
-              onPressed: _showSendMoneyDialog,
-              icon: const Icon(Icons.send),
-              label: const Text('Send'),
-            )
-          : null,
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildInfoChip(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(16),
+  Widget _buildActionButton(BuildContext context, IconData icon, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: Colors.white),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              color: Colors.grey[400],
+              fontSize: 12,
+            ),
+          ),
+        ],
       ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
+    );
+  }
+
+  void _showAIAdvisor() async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: Color(0xFF0A0E17),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          border: Border(top: BorderSide(color: Color(0xFF2D5BFF), width: 1)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[800],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 32),
+            const Icon(Icons.psychology, size: 64, color: Color(0xFF00D2FF)),
+            const SizedBox(height: 16),
+            Text(
+              'AI Insights',
+              style: GoogleFonts.inter(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Text(
+                'Based on your transaction history, you could save 15% by optimizing your transfer times. Would you like to enable auto-optimization?',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  color: Colors.grey[300],
+                  fontSize: 16,
+                  height: 1.5,
+                ),
+              ),
+            ),
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2D5BFF),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Text(
+                    'Enable Optimization',
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
         ),
       ),
     );
