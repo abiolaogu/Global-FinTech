@@ -11,90 +11,139 @@ spec:
   selector:
     matchLabels:
       {{- include "atlasx.selectorLabels" . | nindent 6 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   template:
     metadata:
+      labels:
+        {{- include "atlasx.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- if and .Values.secrets.create (not .Values.secrets.existingSecret) }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- end }}
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-      labels:
-        {{- include "atlasx.selectorLabels" . | nindent 8 }}
     spec:
+      serviceAccountName: {{ include "atlasx.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: 30
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "atlasx.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
           ports:
             - name: http
               containerPort: {{ .Values.config.port }}
               protocol: TCP
           env:
             - name: NODE_ENV
-              value: {{ .Values.config.nodeEnv }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "atlasx.fullname" . }}-config
+                  key: NODE_ENV
             - name: LOG_LEVEL
-              value: {{ .Values.config.logLevel }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "atlasx.fullname" . }}-config
+                  key: LOG_LEVEL
             - name: PORT
-              value: {{ .Values.config.port | quote }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "atlasx.fullname" . }}-config
+                  key: PORT
+            - name: CORE_API_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "atlasx.fullname" . }}-config
+                  key: CORE_API_ENABLED
+            - name: CORS_ORIGIN
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "atlasx.fullname" . }}-config
+                  key: CORS_ORIGIN
+            - name: RATE_LIMIT_WINDOW
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "atlasx.fullname" . }}-config
+                  key: RATE_LIMIT_WINDOW
+            - name: RATE_LIMIT_MAX
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "atlasx.fullname" . }}-config
+                  key: RATE_LIMIT_MAX
             - name: DATABASE_HOST
-              value: {{ include "atlasx.postgresql.fullname" . }}
+              value: {{ ternary (include "atlasx.postgresql.fullname" .) .Values.database.host .Values.postgresql.enabled | quote }}
             - name: DATABASE_PORT
-              value: "5432"
+              value: {{ .Values.database.port | quote }}
             - name: DATABASE_NAME
-              value: {{ .Values.postgresql.auth.database }}
+              value: {{ .Values.database.name | quote }}
             - name: DATABASE_USER
-              value: {{ .Values.postgresql.auth.username }}
+              value: {{ .Values.database.user | quote }}
+            - name: DATABASE_SSL_MODE
+              value: {{ .Values.database.sslMode | quote }}
+            - name: REDIS_HOST
+              value: {{ ternary (printf "%s-master" (include "atlasx.redis.fullname" .)) .Values.redisExternal.host .Values.redis.enabled | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.redisExternal.port | quote }}
             - name: DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "atlasx.fullname" . }}-secrets
-                  key: database-password
-            - name: REDIS_HOST
-              value: {{ include "atlasx.redis.fullname" . }}-master
-            - name: REDIS_PORT
-              value: "6379"
+                  name: {{ include "atlasx.secretName" . }}
+                  key: DATABASE_PASSWORD
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "atlasx.fullname" . }}-secrets
-                  key: redis-password
+                  name: {{ include "atlasx.secretName" . }}
+                  key: REDIS_PASSWORD
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "atlasx.fullname" . }}-secrets
-                  key: jwt-secret
+                  name: {{ include "atlasx.secretName" . }}
+                  key: JWT_SECRET
             - name: JWT_REFRESH_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "atlasx.fullname" . }}-secrets
-                  key: jwt-refresh-secret
+                  name: {{ include "atlasx.secretName" . }}
+                  key: JWT_REFRESH_SECRET
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "atlasx.secretName" . }}
+                  key: ENCRYPTION_KEY
+          {{- if .Values.startupProbe.enabled }}
+          startupProbe:
+            {{- toYaml .Values.startupProbe | nindent 12 }}
+          {{- end }}
           livenessProbe:
-            httpGet:
-              path: /health
-              port: http
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
-            httpGet:
-              path: /health/ready
-              port: http
-            initialDelaySeconds: 10
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 3
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      {{- if .Values.topologySpreadConstraints.enabled }}
+      topologySpreadConstraints:
+        - maxSkew: {{ .Values.topologySpreadConstraints.maxSkew }}
+          topologyKey: {{ .Values.topologySpreadConstraints.topologyKey }}
+          whenUnsatisfiable: {{ .Values.topologySpreadConstraints.whenUnsatisfiable }}
+          labelSelector:
+            matchLabels:
+              {{- include "atlasx.selectorLabels" . | nindent 14 }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

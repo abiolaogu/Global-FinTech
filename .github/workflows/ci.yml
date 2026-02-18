@@ -7,24 +7,36 @@ on:
     branches: [ main ]
 
 jobs:
+  aidd-guardrails:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Helm
+      uses: azure/setup-helm@v4
+      with:
+        version: v3.14.4
+    - name: Install ripgrep
+      run: sudo apt-get update && sudo apt-get install -y ripgrep
+    - name: Run AIDD guardrails
+      run: ./scripts/aidd-guardrail.sh
+
   build-and-test-web:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./apps/web
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Use Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
         cache: 'npm'
         cache-dependency-path: ./apps/web/package-lock.json
     - name: Install Dependencies
       run: npm ci
     - name: Run Lint
       run: npm run lint
-      continue-on-error: true # Don't fail on lint for now
     - name: Run Tests
       run: npm test -- --passWithNoTests
     - name: Build
@@ -38,11 +50,11 @@ jobs:
       run:
         working-directory: ./apps/api
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Use Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
         cache: 'npm'
         cache-dependency-path: ./apps/api/package-lock.json
     - name: Install Dependencies
@@ -54,13 +66,56 @@ jobs:
     - name: Security Audit
       run: npm audit --audit-level=high
 
+  api-core-smoke-postgres:
+    runs-on: ubuntu-latest
+    needs: [build-and-test-api]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: atlasx_ci
+        options: >-
+          --health-cmd "pg_isready -U postgres -d atlasx_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    defaults:
+      run:
+        working-directory: ./apps/api
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: ./apps/api/package-lock.json
+    - name: Install Dependencies
+      run: npm ci
+    - name: Build API
+      run: npm run build
+    - name: Smoke Test API Core (Postgres)
+      env:
+        CORE_API_ENABLED: "true"
+        NODE_ENV: production
+        PORT: "3000"
+        DATABASE_HOST: postgres
+        DATABASE_PORT: "5432"
+        DATABASE_NAME: atlasx_ci
+        DATABASE_USER: postgres
+        DATABASE_PASSWORD: postgres
+        DATABASE_SSL_MODE: disable
+      run: ./scripts/core-api-postgres-smoke.sh
+
   build-ai-service:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./services/ai-advisor-svc
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
