@@ -75,9 +75,69 @@ export class WalletEntity {
   @Column({ type: 'text', nullable: true })
   frozenReason: string;
 
+  // Credit Line fields
+  @Column('decimal', { precision: 20, scale: 8, default: 0 })
+  creditLimit: string; // Maximum credit line amount
+
+  @Column('decimal', { precision: 20, scale: 8, default: 0 })
+  creditUsed: string; // Amount of credit currently used
+
+  @Column('decimal', { precision: 20, scale: 8, default: 0 })
+  offlineSpendLimit: string; // Maximum amount that can be spent offline
+
+  @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
+  creditInterestRate: number; // Annual percentage rate for credit
+
+  @Column({ type: 'integer', default: 30 })
+  creditGracePeriodDays: number; // Days before interest accrues
+
+  @Column({ type: 'timestamp', nullable: true })
+  creditAllocatedAt: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  creditLastUsedAt: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  creditNextPaymentDue: Date;
+
+  // SMS/USSD Sync tracking
+  @Column({ type: 'timestamp', nullable: true })
+  lastSmsSyncAt: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  lastUssdSyncAt: Date;
+
+  @Column({ type: 'integer', default: 0 })
+  smsSyncCount: number;
+
+  @Column({ type: 'integer', default: 0 })
+  ussdSyncCount: number;
+
+  @Column({ type: 'jsonb', nullable: true })
+  syncSettings: {
+    preferredChannel?: 'internet' | 'sms' | 'ussd';
+    smsEnabled?: boolean;
+    ussdEnabled?: boolean;
+    autoSyncInterval?: number; // minutes
+  };
+
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  // Computed property for credit available
+  get creditAvailable(): string {
+    const limit = parseFloat(this.creditLimit) || 0;
+    const used = parseFloat(this.creditUsed) || 0;
+    return (limit - used).toFixed(8);
+  }
+
+  // Computed property for total available (balance + credit)
+  get totalAvailable(): string {
+    const available = parseFloat(this.availableBalance) || 0;
+    const creditAvail = parseFloat(this.creditAvailable) || 0;
+    return (available + creditAvail).toFixed(8);
+  }
 }
