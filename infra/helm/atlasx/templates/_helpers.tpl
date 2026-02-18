@@ -72,3 +72,14 @@ Create a default fully qualified redis name.
 {{- define "atlasx.redis.fullname" -}}
 {{- printf "%s-redis" .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
+
+{{/*
+Resolve the runtime secret name.
+*/}}
+{{- define "atlasx.secretName" -}}
+{{- if .Values.secrets.existingSecret }}
+{{- .Values.secrets.existingSecret | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-secrets" (include "atlasx.fullname" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end }}

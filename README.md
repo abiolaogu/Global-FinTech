@@ -3,6 +3,15 @@
 
 ---
 
+## Operational Deployment Docs (Harvester/Coolify/Fleet)
+
+- Review and gap analysis: `docs/REVIEW_GAP_ANALYSIS_2026-02-17.md`
+- AIDD guardrails: `docs/AIDD_GUARDRAILS.md`
+- Rancher Fleet GitOps bundle: `infra/fleet/`
+- Coolify stack: `infra/coolify/`
+- Helm chart: `infra/helm/atlasx/`
+- Core business API toggle: `CORE_API_ENABLED` (defaults to `true` in deployment values)
+
 ## PART 1: RECOMMENDED TECHNOLOGY STACK
 
 ### A. CORE BANKING & FINANCIAL SERVICES LAYER

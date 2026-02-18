@@ -1,0 +1,28 @@
+global:
+  environment: shared
+  region: global
+
+image:
+  repository: ghcr.io/global-fintech/global-fintech-api
+  tag: "1.1.0"
+  pullPolicy: IfNotPresent
+
+config:
+  coreApiEnabled: "true"
+
+secrets:
+  create: false
+  existingSecret: atlasx-runtime-secrets
+
+externalSecrets:
+  enabled: true
+  targetSecretName: atlasx-runtime-secrets
+
+postgresql:
+  enabled: false
+
+redis:
+  enabled: false
+
+networkPolicy:
+  enabled: true
