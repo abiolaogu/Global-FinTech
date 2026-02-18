@@ -102,6 +102,12 @@ export class TransactionSwitch implements OnModuleInit, OnModuleDestroy {
     // Start TPS tracker
     this.startTPSTracker();
 
+    if (this.connectionPools.size === 0) {
+      this.logger.warn(
+        'Transaction Switch started without active destination pools; running in degraded mode until networks are reachable.',
+      );
+    }
+
     this.logger.log('Transaction Switch initialized successfully');
   }
 
@@ -398,9 +404,16 @@ export class TransactionSwitch implements OnModuleInit, OnModuleDestroy {
 
     for (const dest of destinations) {
       const pool = new ConnectionPool(dest, this);
-      await pool.initialize();
-      this.connectionPools.set(dest.id, pool);
-      this.logger.log(`Initialized connection pool for ${dest.name}`);
+      try {
+        await pool.initialize();
+        this.connectionPools.set(dest.id, pool);
+        this.logger.log(`Initialized connection pool for ${dest.name}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.warn(
+          `Skipping destination ${dest.name} (${dest.host}:${dest.port}) during startup: ${message}`,
+        );
+      }
     }
   }
 
