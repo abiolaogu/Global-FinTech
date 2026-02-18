@@ -12,3 +12,36 @@ opa
 
 # IDE
 .idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node.js / TypeScript
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm/
+.pnpm-store/
+*.tsbuildinfo
+
+# Build artifacts
+dist/
+build/
+.next/
+coverage/
+*.tgz
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+
+# Archives and local generated bundles
+*.tar.gz

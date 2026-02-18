@@ -5,6 +5,8 @@ import 'core/services/offline_wallet_service.dart';
 import 'core/services/sync_service.dart';
 import 'core/services/wallet_encryption_service.dart';
 import 'features/wallet/screens/offline_wallet_screen.dart';
+import 'features/wallet/screens/transaction_history_screen.dart';
+import 'features/splash/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,11 +64,11 @@ class GlobalFinTechApp extends StatelessWidget {
             elevation: 4,
           ),
         ),
-        home: const SplashScreen(),
+        // home: const SplashScreen(), // Removed home property
         routes: {
-          '/wallet': (context) => const OfflineWalletScreen(
-                userId: 'demo-user-id',
-              ),
+          '/': (context) => const SplashScreen(),
+          '/wallet': (context) => const OfflineWalletScreen(),
+          '/history': (context) => const TransactionHistoryScreen(),
         },
       ),
     );

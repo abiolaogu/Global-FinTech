@@ -1,0 +1,25 @@
+defaultNamespace: atlasx
+
+helm:
+  chart: ../helm/atlasx
+  releaseName: atlasx
+  valuesFiles:
+    - values/common.yaml
+
+targetCustomizations:
+  - name: production
+    clusterSelector:
+      matchLabels:
+        env: production
+    helm:
+      valuesFiles:
+        - values/common.yaml
+        - values/production.yaml
+  - name: staging
+    clusterSelector:
+      matchLabels:
+        env: staging
+    helm:
+      valuesFiles:
+        - values/common.yaml
+        - values/staging.yaml

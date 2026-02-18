@@ -1,0 +1,59 @@
+services:
+  api:
+    image: ${API_IMAGE:-ghcr.io/global-fintech/global-fintech-api:1.1.0}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      CORE_API_ENABLED: ${CORE_API_ENABLED:-true}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_PORT: ${DATABASE_PORT:-5432}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    ports:
+      - "3001:3000"
+
+  web:
+    image: ${WEB_IMAGE:-ghcr.io/global-fintech/global-fintech-web:1.1.0}
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_AI_ADVISOR_URL: ${NEXT_PUBLIC_AI_ADVISOR_URL}
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000 || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    ports:
+      - "3000:3000"
+
+  ai-advisor:
+    image: ${AI_ADVISOR_IMAGE:-ghcr.io/global-fintech/ai-advisor:1.0.0}
+    restart: unless-stopped
+    environment:
+      MODEL_TYPE: ${MODEL_TYPE:-mock}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    ports:
+      - "8000:8000"
