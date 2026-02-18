@@ -78,6 +78,8 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: atlasx_ci
+        ports:
+        - 5432:5432
         options: >-
           --health-cmd "pg_isready -U postgres -d atlasx_ci"
           --health-interval 5s
