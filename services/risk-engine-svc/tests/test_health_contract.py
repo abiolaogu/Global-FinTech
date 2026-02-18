@@ -1,4 +1,10 @@
+import sys
+from pathlib import Path
+
 from fastapi.testclient import TestClient
+
+# Ensure service root is importable in CI runners.
+sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from app.main import app
 
