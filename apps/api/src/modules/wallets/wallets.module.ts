@@ -5,6 +5,7 @@ import { WalletsController } from './wallets.controller';
 import { WalletEntity } from './entities/wallet.entity';
 import { WalletTransactionEntity } from './entities/wallet-transaction.entity';
 import { WalletHoldEntity } from './entities/wallet-hold.entity';
+import { WalletService } from './wallet.service';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { WalletHoldEntity } from './entities/wallet-hold.entity';
     ]),
   ],
   controllers: [WalletsController],
-  providers: [WalletsService],
-  exports: [WalletsService],
+  providers: [WalletsService, WalletService],
+  exports: [WalletsService, WalletService],
 })
 export class WalletsModule {}

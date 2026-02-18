@@ -97,7 +97,10 @@ export class CardManagementService {
         activatedDate: request.cardType === CardType.VIRTUAL ? new Date() : null,
         billingAddress: request.billingAddress,
         shippingAddress: request.shippingAddress,
-        limits: request.limits || this.getDefaultLimits(request.cardType),
+        limits: {
+          ...this.getDefaultLimits(request.cardType),
+          ...(request.limits || {}),
+        },
         features: {
           contactless: true,
           atmWithdrawal: true,

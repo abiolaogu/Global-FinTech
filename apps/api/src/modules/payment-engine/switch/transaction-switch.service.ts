@@ -29,6 +29,7 @@ export interface RoutingDestination {
   ssl: boolean;
   timeout: number;
   maxConnections: number;
+  fallbackDestination?: RoutingDestination;
 }
 
 export interface TransactionMetrics {
@@ -79,7 +80,7 @@ export class TransactionSwitch implements OnModuleInit, OnModuleDestroy {
 
   // TPS tracking
   private tpsWindow: number[] = [];
-  private tpsInterval: NodeJS.Timer;
+  private tpsInterval: NodeJS.Timeout;
 
   // Circuit breaker states
   private circuitBreakers: Map<string, CircuitBreaker> = new Map();
@@ -549,7 +550,7 @@ class ConnectionPool {
 
   constructor(
     private readonly destination: RoutingDestination,
-    private readonly switch: TransactionSwitch,
+    private readonly transactionSwitch: TransactionSwitch,
   ) {}
 
   async initialize(): Promise<void> {
@@ -615,7 +616,7 @@ class ConnectionPool {
 
         if (messageBuffer.length >= messageLength + 2) {
           const messageData = messageBuffer.slice(2, messageLength + 2);
-          this.switch.handleResponse(messageData, connection);
+          this.transactionSwitch.handleResponse(messageData, connection);
 
           messageBuffer = messageBuffer.slice(messageLength + 2);
         } else {
