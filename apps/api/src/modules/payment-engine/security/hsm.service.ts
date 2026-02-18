@@ -250,8 +250,8 @@ export class HSMService {
    */
   generateZPK(): { key: string; checkValue: string } {
     try {
-      // Generate random 16-byte key (Triple DES)
-      const key = crypto.randomBytes(16).toString('hex').toUpperCase();
+      // Generate random 24-byte key for 3DES EDE3 operations.
+      const key = crypto.randomBytes(24).toString('hex').toUpperCase();
 
       // Calculate key check value (encrypt 8 zeros)
       const checkValue = this.tripleDesEncrypt('0'.repeat(16), key).substring(0, 6);
@@ -368,9 +368,10 @@ export class HSMService {
    * Triple DES encryption
    */
   private tripleDesEncrypt(data: string, key: string): string {
+    const normalizedKey = this.normalizeTripleDesKey(key);
     const cipher = crypto.createCipheriv(
       'des-ede3',
-      Buffer.from(key, 'hex'),
+      normalizedKey,
       Buffer.alloc(0),
     );
     cipher.setAutoPadding(false);
@@ -385,9 +386,10 @@ export class HSMService {
    * Triple DES decryption
    */
   private tripleDesDecrypt(encryptedData: string, key: string): string {
+    const normalizedKey = this.normalizeTripleDesKey(key);
     const decipher = crypto.createDecipheriv(
       'des-ede3',
-      Buffer.from(key, 'hex'),
+      normalizedKey,
       Buffer.alloc(0),
     );
     decipher.setAutoPadding(false);
@@ -442,7 +444,11 @@ export class HSMService {
     }
 
     // Encrypt masked KSN with BDK
-    const cipher = crypto.createCipheriv('des-ede3', bdk, Buffer.alloc(0));
+    const cipher = crypto.createCipheriv(
+      'des-ede3',
+      this.normalizeTripleDesKey(bdk),
+      Buffer.alloc(0),
+    );
     const ipek = cipher.update(maskedKSN);
 
     return ipek;
@@ -455,10 +461,38 @@ export class HSMService {
     // DUKPT session key derivation (simplified)
     // Full implementation would follow ANSI X9.24
 
-    const cipher = crypto.createCipheriv('des-ede3', ipek, Buffer.alloc(0));
+    const cipher = crypto.createCipheriv(
+      'des-ede3',
+      this.normalizeTripleDesKey(ipek),
+      Buffer.alloc(0),
+    );
     const sessionKey = cipher.update(ksn.slice(0, 8));
 
     return sessionKey;
+  }
+
+  /**
+   * Normalize 3DES keys to a valid EDE3 length.
+   * 16-byte keys are expanded to 24 bytes by appending the first 8 bytes.
+   */
+  private normalizeTripleDesKey(key: string | Buffer): Buffer {
+    const keyBuffer = Buffer.isBuffer(key) ? key : Buffer.from(key, 'hex');
+
+    if (keyBuffer.length === 24) {
+      return keyBuffer;
+    }
+
+    if (keyBuffer.length === 16) {
+      return Buffer.concat([keyBuffer, keyBuffer.subarray(0, 8)]);
+    }
+
+    if (keyBuffer.length > 24) {
+      return keyBuffer.subarray(0, 24);
+    }
+
+    throw new Error(
+      `Invalid 3DES key length: ${keyBuffer.length} bytes (expected 16 or 24)`,
+    );
   }
 
   /**

@@ -41,7 +41,7 @@ export enum PartnerStatus {
 
 @Entity('marketplace_partners')
 @Index(['status', 'category'])
-@Index(['country'])
+@Index(['countries'])
 export class MarketplacePartnerEntity {
   @PrimaryGeneratedColumn('uuid')
   partner_id: string;

@@ -29,6 +29,7 @@ export interface RoutingDestination {
   ssl: boolean;
   timeout: number;
   maxConnections: number;
+  fallbackDestination?: RoutingDestination;
 }
 
 export interface TransactionMetrics {
@@ -79,7 +80,7 @@ export class TransactionSwitch implements OnModuleInit, OnModuleDestroy {
 
   // TPS tracking
   private tpsWindow: number[] = [];
-  private tpsInterval: NodeJS.Timer;
+  private tpsInterval: NodeJS.Timeout;
 
   // Circuit breaker states
   private circuitBreakers: Map<string, CircuitBreaker> = new Map();
@@ -100,6 +101,12 @@ export class TransactionSwitch implements OnModuleInit, OnModuleDestroy {
 
     // Start TPS tracker
     this.startTPSTracker();
+
+    if (this.connectionPools.size === 0) {
+      this.logger.warn(
+        'Transaction Switch started without active destination pools; running in degraded mode until networks are reachable.',
+      );
+    }
 
     this.logger.log('Transaction Switch initialized successfully');
   }
@@ -397,9 +404,16 @@ export class TransactionSwitch implements OnModuleInit, OnModuleDestroy {
 
     for (const dest of destinations) {
       const pool = new ConnectionPool(dest, this);
-      await pool.initialize();
-      this.connectionPools.set(dest.id, pool);
-      this.logger.log(`Initialized connection pool for ${dest.name}`);
+      try {
+        await pool.initialize();
+        this.connectionPools.set(dest.id, pool);
+        this.logger.log(`Initialized connection pool for ${dest.name}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.warn(
+          `Skipping destination ${dest.name} (${dest.host}:${dest.port}) during startup: ${message}`,
+        );
+      }
     }
   }
 
@@ -549,7 +563,7 @@ class ConnectionPool {
 
   constructor(
     private readonly destination: RoutingDestination,
-    private readonly switch: TransactionSwitch,
+    private readonly transactionSwitch: TransactionSwitch,
   ) {}
 
   async initialize(): Promise<void> {
@@ -615,7 +629,7 @@ class ConnectionPool {
 
         if (messageBuffer.length >= messageLength + 2) {
           const messageData = messageBuffer.slice(2, messageLength + 2);
-          this.switch.handleResponse(messageData, connection);
+          this.transactionSwitch.handleResponse(messageData, connection);
 
           messageBuffer = messageBuffer.slice(messageLength + 2);
         } else {

@@ -23,6 +23,10 @@ class InsightResponse(BaseModel):
 def read_root():
     return {"status": "AI Advisor Service Running", "providers": ["mock", "gemini", "openai", "anthropic"]}
 
+@app.get("/health")
+def health_check():
+    return {"status": "UP", "service": "ai-advisor-svc"}
+
 @app.post("/advise", response_model=InsightResponse)
 async def get_advice(query: FinancialQuery):
     try:
