@@ -157,7 +157,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest httpx
+        pip install pytest "httpx<0.28"
     - name: Build
       working-directory: ./services/${{ matrix.service }}
       run: python -m compileall .
