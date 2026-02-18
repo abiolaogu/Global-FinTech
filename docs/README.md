@@ -6,6 +6,13 @@
 
 This index provides a categorized reference to all documentation for the Global FinTech Platform (AtlasX) — a Revolut-class multi-currency fintech platform combining core banking (Apache Fineract), payment switching (JPOS), blockchain attestation (Hyperledger Fabric), and modern API services (NestJS, FastAPI).
 
+## Quick Links
+
+- [Main README](../README.md) — Platform overview and getting started
+- [Interactive Demo](PLATFORM_DEMO.html) — Live preview of all platform features
+- [User Manual](USER_MANUAL.md) — Complete end-user guide
+- [Training Manual](TRAINING_MANUAL.md) — Comprehensive training program
+
 ---
 
 ## 1. Strategy & Requirements
@@ -77,3 +84,47 @@ This index provides a categorized reference to all documentation for the Global 
 | [Business Plan](Business_Plan.md) | Business strategy and financials |
 | [Threat Model](Threat_Model.md) | Security threat analysis |
 | [Runbooks](Runbooks.md) | Operational runbooks |
+
+## Feature & Integration Documentation
+
+| Document | Description |
+|----------|-------------|
+| [TigerBeetle Integration](TIGERBEETLE_INTEGRATION_ARCHITECTURE.md) | Financial ledger integration architecture |
+| [TigerBeetle Quick Start](TIGERBEETLE_QUICKSTART.md) | TigerBeetle implementation quick start |
+| [TigerBeetle Implementation Steps](TIGERBEETLE_IMPLEMENTATION_STEPS.md) | Step-by-step implementation guide |
+| [SMS/USSD Sync Architecture](SMS_USSD_SYNC_ARCHITECTURE.md) | Offline synchronization capabilities |
+| [SMS/USSD Implementation Guide](IMPLEMENTATION_GUIDE_SMS_USSD.md) | Offline sync implementation |
+| [Airtime/Data Marketplace](AIRTIME_DATA_MARKETPLACE_ARCHITECTURE.md) | Marketplace design and provider integration |
+| [Real-Time Payments](REALTIME_PAYMENTS.md) | Payment rails and settlement flows |
+| [Global Payment Rails](GLOBAL_PAYMENT_RAILS_EXPANSION.md) | International payment capabilities |
+| [Investment Platform](INVESTMENT_PLATFORM.md) | Investment features (planned) |
+| [AI Chat Assistant](AI_CHAT_ASSISTANT.md) | AI-powered customer support |
+| [AIOps Monitoring](AIOPS_MONITORING.md) | Intelligent operations monitoring |
+| [Interactive Demo](PLATFORM_DEMO.html) | Clickable platform feature demo |
+
+## Documentation by User Type
+
+### For End Users
+1. [User Manual](USER_MANUAL.md) — How to use the platform
+2. [End User Manual (AIDD)](user-manual-enduser.md) — Mobile and web guide
+3. [Platform Demo](PLATFORM_DEMO.html) — Interactive feature preview
+4. [Training Manual](TRAINING_MANUAL.md) — Self-paced learning
+
+### For Developers
+1. [Developer Manual](user-manual-developer.md) — API integration guide
+2. [TigerBeetle Quick Start](TIGERBEETLE_QUICKSTART.md) — Get coding fast
+3. [Developer Training](training-manual-developer.md) — Training curriculum
+4. [Main README](../README.md) — Setup and development
+
+### For Administrators
+1. [Admin Manual](user-manual-admin.md) — Platform administration
+2. [Admin Training](training-manual-admin.md) — Admin training
+3. [AIOps Monitoring](AIOPS_MONITORING.md) — Operations monitoring
+
+### For DevOps/SRE
+1. [Deployment Guide](deployment.md) — Kubernetes, Helm, CI/CD
+2. [Hardware Requirements](hardware-requirements.md) — Infrastructure sizing
+3. [TigerBeetle Implementation](TIGERBEETLE_IMPLEMENTATION_STEPS.md) — Deployment
+
+### Diagrams
+Visual representations in the [diagrams](diagrams/) directory.

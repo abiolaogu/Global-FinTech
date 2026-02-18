@@ -19,7 +19,7 @@ class LocalDatabase {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -45,6 +45,19 @@ class LocalDatabase {
         status $textType DEFAULT 'active',
         last_synced_at $intType,
         is_synced $intType DEFAULT 1,
+        credit_limit $realType DEFAULT 0,
+        credit_used $realType DEFAULT 0,
+        offline_spend_limit $realType DEFAULT 0,
+        credit_interest_rate $realType DEFAULT 0,
+        credit_grace_period_days $intType DEFAULT 30,
+        credit_allocated_at $intType,
+        credit_last_used_at $intType,
+        credit_next_payment_due $intType,
+        last_sms_sync_at $intType,
+        last_ussd_sync_at $intType,
+        sms_sync_count $intType DEFAULT 0,
+        ussd_sync_count $intType DEFAULT 0,
+        preferred_sync_channel $textTypeNullable,
         created_at $intType,
         updated_at $intType
       )
@@ -122,7 +135,20 @@ class LocalDatabase {
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
     // Handle database upgrades here
     if (oldVersion < 2) {
-      // Future migrations
+      // Add credit line and SMS/USSD sync fields to offline_wallets table
+      await db.execute('ALTER TABLE offline_wallets ADD COLUMN credit_limit REAL DEFAULT 0');
+      await db.execute('ALTER TABLE offline_wallets ADD COLUMN credit_used REAL DEFAULT 0');
+      await db.execute('ALTER TABLE offline_wallets ADD COLUMN offline_spend_limit REAL DEFAULT 0');
+      await db.execute('ALTER TABLE offline_wallets ADD COLUMN credit_interest_rate REAL DEFAULT 0');
+      await db.execute('ALTER TABLE offline_wallets ADD COLUMN credit_grace_period_days INTEGER DEFAULT 30');
+      await db.execute('ALTER TABLE offline_wallets ADD COLUMN credit_allocated_at INTEGER');
+      await db.execute('ALTER TABLE offline_wallets ADD COLUMN credit_last_used_at INTEGER');
+      await db.execute('ALTER TABLE offline_wallets ADD COLUMN credit_next_payment_due INTEGER');
+      await db.execute('ALTER TABLE offline_wallets ADD COLUMN last_sms_sync_at INTEGER');
+      await db.execute('ALTER TABLE offline_wallets ADD COLUMN last_ussd_sync_at INTEGER');
+      await db.execute('ALTER TABLE offline_wallets ADD COLUMN sms_sync_count INTEGER DEFAULT 0');
+      await db.execute('ALTER TABLE offline_wallets ADD COLUMN ussd_sync_count INTEGER DEFAULT 0');
+      await db.execute('ALTER TABLE offline_wallets ADD COLUMN preferred_sync_channel TEXT');
     }
   }
 
