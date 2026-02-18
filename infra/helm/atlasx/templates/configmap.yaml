@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "atlasx.fullname" . }}-config
+  labels:
+    {{- include "atlasx.labels" . | nindent 4 }}
+data:
+  NODE_ENV: {{ .Values.config.nodeEnv | quote }}
+  LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  PORT: {{ .Values.config.port | quote }}
+  CORE_API_ENABLED: {{ .Values.config.coreApiEnabled | quote }}
+  CORS_ORIGIN: {{ .Values.config.corsOrigin | quote }}
+  RATE_LIMIT_WINDOW: {{ .Values.config.rateLimitWindow | quote }}
+  RATE_LIMIT_MAX: {{ .Values.config.rateLimitMax | quote }}
+  TRUSTED_PROXY: {{ .Values.config.trustedProxy | quote }}

@@ -2,10 +2,55 @@
 
 > Enterprise-grade payment processing, wallet management, and airtime/data vending platform powered by TigerBeetle for ultra-high-performance financial operations.
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![TigerBeetle](https://img.shields.io/badge/TigerBeetle-v0.15.0-brightgreen.svg)](https://tigerbeetle.com)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
-[![Flutter](https://img.shields.io/badge/Flutter-3.0+-blue.svg)](https://flutter.dev/)
+## Operational Deployment Docs (Harvester/Coolify/Fleet)
+
+- Review and gap analysis: `docs/REVIEW_GAP_ANALYSIS_2026-02-17.md`
+- AIDD guardrails: `docs/AIDD_GUARDRAILS.md`
+- Rancher Fleet GitOps bundle: `infra/fleet/`
+- Coolify stack: `infra/coolify/`
+- Helm chart: `infra/helm/atlasx/`
+- Core business API toggle: `CORE_API_ENABLED` (defaults to `true` in deployment values)
+
+## PART 1: RECOMMENDED TECHNOLOGY STACK
+
+### A. CORE BANKING & FINANCIAL SERVICES LAYER
+
+#### 1. Apache Fineract 1.9+ (Core Banking Engine)
+**Why Fineract over CN:**
+- Fineract 1.x is a banking platform with open APIs that is mature and stable with a robust feature set for microfinance, SACCOs, and more, used in dozens of countries and hundreds of institutions globally
+- **Recommendation: YES, use Fineract 1.x** (not deprecated CN)
+- **Features to leverage:**
+  - Multi-tenancy for regional deployments
+  - Account and wallet management
+  - KYC/AML framework
+  - Real-time accounting
+  - REST APIs for third-party integrations
+  - Loan and savings portfolio management
+  - Transaction scheduling and automation
+
+**Stack Components:**
+- Backend: Java 17+, Spring Boot 3.x
+- Database: PostgreSQL 15+ (for ACID compliance and fintech requirements)
+- APIs: REST (v1) with OpenAPI/Swagger documentation
+- Authentication: OAuth2 + JWT
+
+#### 2. JPOS (Payment Gateway, Acquirer, Issuer)
+**Why JPOS:**
+- ISO 8583 compliance for payments
+- Multi-protocol support (TCP/IP, HTTP, SSL)
+- Open-source, modular architecture
+- PCI-DSS compliant
+- Transactions logging and auditing
+- Network layer agnostic
+
+**JPOS Deployment Architecture:**
+```
+├── jPOS Acquirer Module (Card network connections)
+├── jPOS Issuer Module (Card issuance & authorization)
+├── jPOS Payment Gateway (Transaction routing & switching)
+├── jPOS QSP (Query/Settlement Processing)
+└── jPOS Switch (Real-time transaction switching)
+```
 
 ## Overview
 

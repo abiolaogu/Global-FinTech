@@ -1,0 +1,57 @@
+global:
+  environment: production
+  region: global
+
+replicaCount: 5
+
+autoscaling:
+  enabled: true
+  minReplicas: 5
+  maxReplicas: 40
+  targetCPUUtilizationPercentage: 65
+  targetMemoryUtilizationPercentage: 75
+
+pdb:
+  enabled: true
+  minAvailable: 3
+
+ingress:
+  hosts:
+    - host: api.global-fintech.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: global-fintech-api-tls
+      hosts:
+        - api.global-fintech.com
+
+database:
+  host: postgres-primary.prod.svc.cluster.local
+  port: 5432
+  name: atlasx_prod
+  user: atlasx_app
+  sslMode: require
+
+redisExternal:
+  host: redis-master.prod.svc.cluster.local
+  port: 6379
+
+externalSecrets:
+  secretStoreRef:
+    name: atlasx-prod-secret-store
+    kind: ClusterSecretStore
+
+networkPolicy:
+  allowedIngressNamespaces:
+    - ingress-nginx
+  allowedMonitoringNamespaces:
+    - monitoring
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 2000m
+    memory: 2Gi

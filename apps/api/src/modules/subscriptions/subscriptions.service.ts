@@ -264,7 +264,7 @@ export class SubscriptionsService {
 
     for (const subscription of dueSubscriptions) {
       try {
-        await this.chargeSubs cription(subscription);
+        await this.chargeSubscription(subscription);
       } catch (error) {
         this.logger.error(
           `Failed to charge subscription ${subscription.subscriptionId}: ${error.message}`,

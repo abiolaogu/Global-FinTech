@@ -1,0 +1,25 @@
+name: frontend-regenerate
+
+on:
+  workflow_dispatch:
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    env:
+      HASURA_ENDPOINT: ${{ secrets.HASURA_ENDPOINT }}
+      HASURA_ADMIN_SECRET: ${{ secrets.HASURA_ADMIN_SECRET }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Pull schema
+        run: ./scripts/schema-pull.sh
+
+      - name: Regenerate all clients
+        run: ./scripts/codegen-all.sh

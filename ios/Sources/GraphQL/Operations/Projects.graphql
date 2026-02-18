@@ -1,0 +1,7 @@
+query ProjectsList {
+  projects {
+    id
+    name
+    organization_id
+  }
+}

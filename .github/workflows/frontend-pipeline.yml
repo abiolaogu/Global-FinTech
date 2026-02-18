@@ -1,0 +1,51 @@
+name: frontend-pipeline
+
+on:
+  push:
+    paths:
+      - "backend/hasura/metadata/**"
+      - "backend/schema.graphql"
+      - "schema.graphql"
+      - "web/src/graphql/**"
+      - "src/graphql/**"
+      - "flutter/lib/graphql/**"
+      - "android/app/src/main/graphql/**"
+      - "ios/Sources/GraphQL/**"
+  pull_request:
+    paths:
+      - "backend/hasura/metadata/**"
+      - "backend/schema.graphql"
+      - "schema.graphql"
+      - "web/src/graphql/**"
+      - "src/graphql/**"
+      - "flutter/lib/graphql/**"
+      - "android/app/src/main/graphql/**"
+      - "ios/Sources/GraphQL/**"
+
+jobs:
+  frontend-stack:
+    runs-on: ubuntu-latest
+    env:
+      HASURA_ENDPOINT: ${{ secrets.HASURA_ENDPOINT }}
+      HASURA_ADMIN_SECRET: ${{ secrets.HASURA_ADMIN_SECRET }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Pull Schema (if endpoint configured)
+        run: ./scripts/schema-pull.sh
+
+      - name: Generate clients
+        run: ./scripts/codegen-all.sh
+
+      - name: Quality gates
+        run: ./scripts/test-all.sh
+
+      - name: npm audit
+        if: ${{ hashFiles('**/package.json') != '' }}
+        run: npm audit --audit-level=high --omit=dev || true
