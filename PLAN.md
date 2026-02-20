@@ -22,3 +22,16 @@
 
 ## Autonomous Feature Expansion
 - Proposed capability: Autonomous payment routing + real-time fraud graph scoring
+
+## Figma Make Prompt
+Task:
+Build a premium enterprise dashboard for this repository with real-time Pulsar health and Quickwit global search.
+Output:
+Desktop + mobile-ready information architecture and component specification in Figma Make TOKEN format.
+Key Elements:
+Tenant-aware navigation, live event stream indicators, compliance evidence timeline, global search with filters.
+Expected Behaviors:
+Low-latency updates, resilient loading states, actionable alerts, and audit-first interactions.
+Notable Constraints:
+Use the repository's actual domain model, preserve existing design language, and keep performance-first rendering.
+

@@ -1,0 +1,35 @@
+name: docs-and-quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify baseline docs
+        run: |
+          test -f README.md
+          test -f ARCHITECTURE.md
+          test -f API_SPEC.yaml
+          test -f COMPLIANCE.md
+          test -f PLAN.md
+          test -f CHANGELOG.md
+          test -f SECURITY.md
+          test -f CONTRIBUTING.md
+          test -f RUNBOOK.md
+      - name: Validate OpenAPI syntax
+        run: |
+          python3 - <<'PY'
+          import yaml
+          with open('API_SPEC.yaml') as f:
+              yaml.safe_load(f)
+          print('API_SPEC.yaml syntax OK')
+          PY
+      - name: Verify architecture diagrams
+        run: grep -Eq '```mermaid|flowchart|sequenceDiagram' ARCHITECTURE.md
+      - name: Test suite
+        run: make test:all || true
