@@ -1,0 +1,37 @@
+name: perf-hardening
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  perf-and-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run performance profile baseline
+        run: |
+          chmod +x scripts/perf/profile.sh
+          scripts/perf/profile.sh
+
+      - name: Node dependency audit (if present)
+        run: |
+          if [ -f package-lock.json ]; then npm audit --audit-level=high || true; fi
+
+      - name: Go vet and deps audit hints (if present)
+        run: |
+          if [ -f go.mod ]; then go vet ./... || true; fi
+
+      - name: Rust security audit (if present)
+        run: |
+          if [ -f Cargo.toml ]; then cargo install cargo-audit --locked || true; cargo audit || true; fi
+
+      - name: Python dependency audit (if present)
+        run: |
+          if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
+            python3 -m pip install --upgrade pip >/dev/null 2>&1 || true
+            python3 -m pip install pip-audit >/dev/null 2>&1 || true
+            pip-audit || true
+          fi
