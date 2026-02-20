@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BillyronksUnifiedLogEvent",
+  "type": "object",
+  "required": [
+    "timestamp",
+    "level",
+    "service",
+    "trace_id",
+    "message"
+  ],
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "DEBUG",
+        "INFO",
+        "WARN",
+        "ERROR",
+        "FATAL"
+      ]
+    },
+    "service": {
+      "type": "string"
+    },
+    "trace_id": {
+      "type": "string"
+    },
+    "span_id": {
+      "type": "string"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "attrs": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

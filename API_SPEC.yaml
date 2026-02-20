@@ -1,0 +1,69 @@
+openapi: 3.0.3
+info:
+  title: Global-FinTech Service API
+  version: 1.0.0
+  description: Standardized API contract for the Billyronks ecosystem.
+servers:
+  - url: https://api.example.local
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service healthy
+  /events/publish:
+    post:
+      summary: Publish event to Pulsar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                topic:
+                  type: string
+                  example: persistent://billyronks/global-fintech/event
+                payload:
+                  type: object
+      responses:
+        '202':
+          description: Accepted
+  /observability/logs:
+    post:
+      summary: Send structured log payload to Quickwit pipeline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogEvent'
+      responses:
+        '202':
+          description: Accepted
+components:
+  schemas:
+    LogEvent:
+      type: object
+      required: [timestamp, level, service, trace_id, message]
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        level:
+          type: string
+          enum: [DEBUG, INFO, WARN, ERROR, FATAL]
+        service:
+          type: string
+        trace_id:
+          type: string
+        span_id:
+          type: string
+        tenant_id:
+          type: string
+        message:
+          type: string
+        attrs:
+          type: object
+          additionalProperties: true

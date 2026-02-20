@@ -1,0 +1,21 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: mayastor
+provisioner: io.openebs.csi-mayastor
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
+parameters:
+  protocol: nvmf
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: stateful-data-template
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: mayastor
+  resources:
+    requests:
+      storage: 50Gi
