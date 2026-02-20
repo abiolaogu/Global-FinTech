@@ -1,0 +1,11 @@
+pulsar:
+  broker_url: pulsar://pulsar-broker.pulsar.svc.cluster.local:6650
+  http_url: http://pulsar-broker.pulsar.svc.cluster.local:8080
+  tenant: billyronks
+  namespace: global-fintech
+  producers:
+    - topic: persistent://billyronks/global-fintech/command
+    - topic: persistent://billyronks/global-fintech/event
+  consumers:
+    - topic: persistent://billyronks/global-fintech/audit
+      subscription: global-fintech-svc-sub

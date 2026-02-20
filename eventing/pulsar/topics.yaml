@@ -1,0 +1,11 @@
+tenant: billyronks
+namespace: global-fintech
+topics:
+  - name: persistent://billyronks/global-fintech/command
+    partitions: 6
+  - name: persistent://billyronks/global-fintech/event
+    partitions: 6
+  - name: persistent://billyronks/global-fintech/audit
+    partitions: 6
+  - name: persistent://billyronks/global/observability
+    partitions: 6
