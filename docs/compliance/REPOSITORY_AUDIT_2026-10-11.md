@@ -1,7 +1,8 @@
 # Global FinTech Privacy and Consumer-Protection Audit
 
-**Evidence date:** 2026-10-11  
-**Baseline commit:** `764b66501b230f18b2e1e7b145b622ef7b9bbdf4`  
+**Evidence date:** 2026-10-11
+
+**Baseline commit:** `764b66501b230f18b2e1e7b145b622ef7b9bbdf4`
 **Status:** Engineering audit and remediation evidence, not legal approval or production certification.
 
 ## Classification and application inventory
