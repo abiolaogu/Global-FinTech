@@ -165,11 +165,12 @@ export class WalletTopupService {
       transaction.userId = topup.userId;
       transaction.type = 'credit';
       transaction.amount = topup.amount;
+      transaction.currency = wallet.currency;
       transaction.balanceBefore = topup.balanceBefore;
       transaction.balanceAfter = wallet.balance;
       transaction.category = 'wallet_topup';
       transaction.description = topup.description || 'Wallet top-up';
-      transaction.reference = topup.reference;
+      transaction.referenceId = topup.reference;
       transaction.status = 'completed';
       transaction.metadata = {
         topupId: topup.topupId,
@@ -312,11 +313,12 @@ export class WalletTopupService {
       transaction.userId = topup.userId;
       transaction.type = 'debit';
       transaction.amount = topup.amount;
+      transaction.currency = wallet.currency;
       transaction.balanceBefore = wallet.balance;
       transaction.balanceAfter = newBalance.toFixed(8);
       transaction.category = 'topup_reversal';
       transaction.description = `Reversal: ${topup.description} - ${dto.reason}`;
-      transaction.reference = `REV-${topup.reference}`;
+      transaction.referenceId = `REV-${topup.reference}`;
       transaction.status = 'completed';
       transaction.metadata = {
         topupId: topup.topupId,

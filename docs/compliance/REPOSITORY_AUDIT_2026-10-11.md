@@ -27,6 +27,7 @@ Canonical ownership is preserved: StratoID/Authentik supplies authenticated prin
 | High | `npm ci` reports 91 dependency advisories (5 low, 24 moderate, 60 high, 2 critical). | Open security review: generate/update the SBOM, assess reachability and compensating controls, then upgrade through tested pull requests. Do not apply a breaking force-upgrade without review. |
 | High/review | `apps/api/src/modules/subscriptions/subscriptions.service.ts` is an unwired/dormant subscription implementation without consent evidence. | Do not expose or schedule it. Before wiring, integrate canonical Nvuto Consent, authenticated ownership, versioned disclosures, acknowledgement/reminders, easy cancellation, migrations, and end-to-end evidence. |
 | Medium/review | Flutter registration and runtime Google Fonts indicators require audience, age-treatment, and third-party-request review. | No legal conclusion from keyword matches. Confirm whether the service is child-directed or has actual knowledge, document the jurisdiction decision, and self-host approved fonts or record the reviewed basis/configuration. |
+| Medium | The wallet top-up service did not compile because lifecycle metadata fields were absent from the entity type and it wrote to a nonexistent transaction `reference` property. | Remediated: lifecycle metadata is typed, ledger records use canonical `referenceId`, required wallet currency is persisted, and a regression test covers the mapping. |
 
 ## Applicability matrix
 
@@ -43,13 +44,13 @@ Canonical ownership is preserved: StratoID/Authentik supplies authenticated prin
 
 ## Test evidence
 
-- `npm test -- --runInBand`: all 10 suites and 36 tests passed, including authentication, authorization, fail-closed encryption keys, payment-log masking, recurring-consent/withdrawal enforcement, disclosure-artifact binding, response minimisation, and the Nvuto Consent client.
-- Shared scanner: 475 files scanned, 2 review findings, 0 confirmed blockers after remediation.
-- `npm run build`: failed on six pre-existing wallet-topup TypeScript errors at `wallet-topup.service.ts:88,172,191,242,319,335`; none is in the privacy-remediation diff, and none was suppressed.
+- `npm test -- --runInBand`: all 11 suites and 37 tests passed, including authentication, authorization, fail-closed encryption keys, payment-log masking, recurring-consent/withdrawal enforcement, disclosure-artifact binding, response minimisation, the Nvuto Consent client, and wallet top-up ledger mapping.
+- Shared scanner: 476 files scanned, 2 review findings, 0 confirmed blockers after remediation.
+- `npm run build`: passed after the wallet top-up entity and ledger mapping were corrected without suppressing type checks.
 - The privacy workflow treats remote-font/replay indicators as advisory and blocks only high-confidence critical patterns. Its JSON artifact is evidence of a source scan, not proof of operating effectiveness.
 
 ## Release blockers and nontechnical obligations
 
-Automatic-renewal release remains blocked until the consumer UI, acknowledgement/reminder delivery, cancellation journey, dormant-subscription-service disposition, deployed Nvuto Consent purpose/channel configuration, Hasura/SpiceDB integration, migration rollout plan, Vault/KMS key injection, and jurisdiction/counsel approval are evidenced in Nvuto GRC. Production payment release also requires PCI and dependency-advisory disposition. The pre-existing build failures block a clean release build. No exception is implied by this document.
+Automatic-renewal release remains blocked until the consumer UI, acknowledgement/reminder delivery, cancellation journey, dormant-subscription-service disposition, deployed Nvuto Consent purpose/channel configuration, Hasura/SpiceDB integration, migration rollout plan, Vault/KMS key injection, and jurisdiction/counsel approval are evidenced in Nvuto GRC. Production payment release also requires PCI and dependency-advisory disposition. No exception is implied by this document.
 
 Current authority references are maintained in the Nvuto GRC jurisdiction pack; they must be re-verified at release time.

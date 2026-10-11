@@ -66,6 +66,13 @@ export class WalletTopupEntity {
     deviceInfo?: string;
     smsId?: string; // If initiated via SMS
     ussdSessionId?: string; // If initiated via USSD
+    initiatedAt?: string;
+    completedAt?: string;
+    failedAt?: string;
+    reversedAt?: string;
+    transactionId?: string;
+    reversalReason?: string;
+    reversalTransactionId?: string;
   };
 
   @Column({ type: 'text', nullable: true })
