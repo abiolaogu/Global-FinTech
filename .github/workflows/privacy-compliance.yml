@@ -1,0 +1,51 @@
+name: Privacy and consumer protection indicators
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  indicators:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect high-confidence unreviewed remote font loads
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib,re,sys
+          skip={'.git','node_modules','vendor','dist','build','.next','coverage','target','.venv'}
+          exts={'.html','.htm','.css','.scss','.tsx','.jsx','.ts','.js','.vue','.svelte'}
+          hits=[]
+          for p in pathlib.Path('.').rglob('*'):
+              if not p.is_file() or p.suffix.lower() not in exts or any(x in skip for x in p.parts):
+                  continue
+              try: s=p.read_text(encoding='utf-8')
+              except (UnicodeError,OSError): continue
+              for i,line in enumerate(s.splitlines(),1):
+                  if re.search(r'https?://fonts\.(?:googleapis|gstatic)\.com',line,re.I):
+                      hits.append(f'{p}:{i}: Google-hosted font URL (review self-hosting and applicable privacy basis)')
+          if hits:
+              print('\n'.join('::warning::'+x for x in hits))
+              print('Found third-party font loading: review / remediate before release.')
+              sys.exit(1)
+          print('No direct Google Fonts URL in supported source files.')
+          PY
+      - name: Flag replay SDK references for privacy review
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib,re
+          skip={'.git','node_modules','vendor','dist','build','.next','coverage','target','.venv'}
+          patterns=re.compile(r'\b(?:rrweb|fullstory|logrocket|hotjar|mouseflow|smartlook)\b',re.I)
+          for p in pathlib.Path('.').rglob('*'):
+              if not p.is_file() or p.suffix.lower() not in {'.js','.jsx','.ts','.tsx','.html','.vue','.svelte','.json'} or any(x in skip for x in p.parts):
+                  continue
+              try: lines=p.read_text(encoding='utf-8').splitlines()
+              except (UnicodeError,OSError): continue
+              for i,line in enumerate(lines,1):
+                  if patterns.search(line):
+                      print(f'::warning file={p},line={i}::Replay/analytics package indicator; review consent, masking and necessity')
+          PY
