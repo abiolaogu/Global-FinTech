@@ -85,6 +85,30 @@ export class RecurringPaymentEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   authorizationCode: string; // For tokenized payments
 
+  @Column({ type: 'varchar', length: 64, nullable: true })
+  consentReceiptId: string; // Canonical Nvuto Consent receipt reference
+
+  @Column({ type: 'timestamp', nullable: true })
+  consentCapturedAt: Date;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  termsVersion: string;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  disclosureVersion: string;
+
+  @Column({ type: 'char', length: 64, nullable: true })
+  disclosureArtifactHash: string;
+
+  @Column({ type: 'varchar', length: 32, nullable: true })
+  jurisdiction: string;
+
+  @Column({ type: 'jsonb', nullable: true })
+  renewalDisclosure: Record<string, string>;
+
+  @Column({ type: 'char', length: 64, nullable: true })
+  consentDigest: string;
+
   @Column({ type: 'integer', default: 0 })
   retryAttempts: number;
 

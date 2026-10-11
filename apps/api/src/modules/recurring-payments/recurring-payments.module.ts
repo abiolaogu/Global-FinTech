@@ -5,6 +5,7 @@ import { RecurringPaymentsController } from './recurring-payments.controller';
 import { RecurringPaymentEntity } from './entities/recurring-payment.entity';
 import { PaymentGatewaysModule } from '../payment-gateways/payment-gateways.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { NvutoConsentClient } from './nvuto-consent.client';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     EventEmitterModule.forRoot(),
   ],
   controllers: [RecurringPaymentsController],
-  providers: [RecurringPaymentsService],
+  providers: [RecurringPaymentsService, NvutoConsentClient],
   exports: [RecurringPaymentsService],
 })
 export class RecurringPaymentsModule {}

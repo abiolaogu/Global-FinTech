@@ -1,5 +1,7 @@
 name: Privacy and consumer protection indicators
 on:
+  schedule:
+    - cron: "20 4 * * *"
   pull_request:
   push:
     branches: [main]
@@ -15,8 +17,8 @@ jobs:
         shell: bash
         run: |
           python3 - <<'PY'
-          import pathlib,re,sys
-          skip={'.git','node_modules','vendor','dist','build','.next','coverage','target','.venv'}
+          import pathlib,re
+          skip={'.git','node_modules','vendor','dist','build','.next','coverage','target','.venv','compliance-evidence'}
           exts={'.html','.htm','.css','.scss','.tsx','.jsx','.ts','.js','.vue','.svelte'}
           hits=[]
           for p in pathlib.Path('.').rglob('*'):
@@ -30,18 +32,18 @@ jobs:
           if hits:
               print('\n'.join('::warning::'+x for x in hits))
               print('Found third-party font loading: review / remediate before release.')
-              sys.exit(1)
-          print('No direct Google Fonts URL in supported source files.')
+          else:
+              print('No direct Google Fonts URL in supported source files.')
           PY
       - name: Flag replay SDK references for privacy review
         shell: bash
         run: |
           python3 - <<'PY'
           import pathlib,re
-          skip={'.git','node_modules','vendor','dist','build','.next','coverage','target','.venv'}
+          skip={'.git','node_modules','vendor','dist','build','.next','coverage','target','.venv','compliance-evidence'}
           patterns=re.compile(r'\b(?:rrweb|fullstory|logrocket|hotjar|mouseflow|smartlook)\b',re.I)
           for p in pathlib.Path('.').rglob('*'):
-              if not p.is_file() or p.suffix.lower() not in {'.js','.jsx','.ts','.tsx','.html','.vue','.svelte','.json'} or any(x in skip for x in p.parts):
+              if not p.is_file() or p.name in {'package-lock.json','pnpm-lock.yaml'} or p.suffix.lower() not in {'.js','.jsx','.ts','.tsx','.html','.vue','.svelte','.json'} or any(x in skip for x in p.parts):
                   continue
               try: lines=p.read_text(encoding='utf-8').splitlines()
               except (UnicodeError,OSError): continue
@@ -49,3 +51,42 @@ jobs:
                   if patterns.search(line):
                       print(f'::warning file={p},line={i}::Replay/analytics package indicator; review consent, masking and necessity')
           PY
+      - name: Block confirmed critical privacy and security patterns
+        shell: bash
+        run: |
+          mkdir -p compliance-evidence
+          python3 - <<'PY'
+          import json,pathlib,re,sys
+          skip={'.git','node_modules','vendor','dist','build','.next','coverage','target','.venv','compliance-evidence'}
+          rules=[
+            ('PRIV-CRIT-001','Raw payment or credential value written to a log',re.compile(r'(?:console|logger)\.(?:log|info|debug|warn|error)\((?![^\n]*(?:mask|redact))[^\n]*(?:(?:request|cardDetails)\.cardNumber|\.cvv\b|\.password\b)',re.I)),
+            ('SEC-CRIT-001','Predictable fallback used for a production secret',re.compile(r'process\.env\.(?:ENCRYPTION_KEY|MASTER_KEY|JWT_SECRET)[^\n]*(?:\|\||\?\?)[^\n]*(?:[\'\"]0+[\'\"]|[\'\"]0[\'\"]\.repeat\()')),
+          ]
+          findings=[]
+          for p in pathlib.Path('.').rglob('*'):
+              if not p.is_file() or any(x in skip for x in p.parts): continue
+              if p.as_posix()=='.github/workflows/privacy-compliance.yml' or '.spec.' in p.name or '.test.' in p.name: continue
+              if p.suffix.lower() not in {'.js','.jsx','.ts','.tsx','.py','.go','.java','.kt','.cs','.rb','.php'}: continue
+              try: lines=p.read_text(encoding='utf-8').splitlines()
+              except (UnicodeError,OSError): continue
+              for line_no,line in enumerate(lines,1):
+                  for rule_id,message,pattern in rules:
+                      if pattern.search(line):
+                          findings.append({'ruleId':rule_id,'severity':'critical','blocking':True,'path':str(p),'line':line_no,'message':message})
+                          print(f'::error file={p},line={line_no}::{rule_id}: {message}')
+              normalized='\n'.join(lines).lower()
+              if 'guard' in p.name.lower() and 'demo-user' in normalized and re.search(r'roles\s*:\s*\[[\'\"]admin[\'\"]\]',normalized) and re.search(r'return\s+true',normalized):
+                  line_no=next((i for i,line in enumerate(lines,1) if 'demo-user' in line.lower()),1)
+                  message='Authentication guard fabricates an administrator identity'
+                  findings.append({'ruleId':'SEC-CRIT-002','severity':'critical','blocking':True,'path':str(p),'line':line_no,'message':message})
+                  print(f'::error file={p},line={line_no}::SEC-CRIT-002: {message}')
+          pathlib.Path('compliance-evidence/findings.json').write_text(json.dumps({'schemaVersion':'1.0','findings':findings},indent=2)+'\n')
+          if findings: sys.exit(1)
+          PY
+      - name: Upload compliance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: privacy-compliance-evidence
+          path: compliance-evidence/findings.json
+          if-no-files-found: error

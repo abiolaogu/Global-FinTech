@@ -7,6 +7,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import Decimal from 'decimal.js';
 import * as crypto from 'crypto';
 import axios from 'axios';
+import { requireEncryptionKey } from '../../common/security/encryption-key';
 
 export interface InitiatePaymentDto {
   senderUserId: string;
@@ -722,7 +723,7 @@ export class RealtimePaymentsService {
   private encryptCredentials(data: string): string {
     // AES-256-GCM encryption
     const algorithm = 'aes-256-gcm';
-    const key = Buffer.from(process.env.ENCRYPTION_KEY || '0'.repeat(64), 'hex');
+    const key = requireEncryptionKey();
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipheriv(algorithm, key, iv);
 
@@ -736,7 +737,7 @@ export class RealtimePaymentsService {
 
   private decryptCredentials(encrypted: string): any {
     const algorithm = 'aes-256-gcm';
-    const key = Buffer.from(process.env.ENCRYPTION_KEY || '0'.repeat(64), 'hex');
+    const key = requireEncryptionKey();
 
     const parts = encrypted.split(':');
     const iv = Buffer.from(parts[0], 'hex');

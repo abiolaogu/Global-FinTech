@@ -83,7 +83,7 @@ export class PaymentGatewayService {
    * Process 3D Secure authentication
    */
   async process3DSecure(request: ThreeDSecureRequest): Promise<ThreeDSecureResponse> {
-    this.logger.log(`3D Secure authentication: ${request.cardNumber}`);
+    this.logger.log(`3D Secure authentication: ${this.maskPAN(request.cardNumber)}`);
 
     try {
       // Enroll card in 3DS
