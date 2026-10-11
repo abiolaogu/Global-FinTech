@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import * as crypto from 'crypto';
 import Decimal from 'decimal.js';
+import { requireEncryptionKey } from '../../common/security/encryption-key';
 
 export interface InitiatePaymentDto {
   userId?: string;
@@ -635,7 +636,7 @@ export class PaymentGatewaysService {
    */
   private encryptCredentials(data: string): string {
     const algorithm = 'aes-256-gcm';
-    const key = Buffer.from(process.env.ENCRYPTION_KEY || '0'.repeat(64), 'hex');
+    const key = requireEncryptionKey();
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipheriv(algorithm, key, iv);
 
